@@ -7,14 +7,17 @@ import {
   Check,
   ShoppingCart,
   ChevronRight,
+  Search,
 } from "lucide-react"
 import {
   type CartLine,
+  type Product,
   cartCount,
   cartTotals,
   formatDOP,
 } from "@/lib/express-data"
 import { CartRow } from "./cart-row"
+import { ProductSearchModal } from "./product-search-modal"
 
 export function ScannerScreen({
   cart,
@@ -22,6 +25,7 @@ export function ScannerScreen({
   scanHint,
   scanDone,
   onScan,
+  onAddToCart,
   onInc,
   onDec,
   onRemove,
@@ -33,6 +37,7 @@ export function ScannerScreen({
   scanHint: string
   scanDone: boolean
   onScan: () => void
+  onAddToCart?: (product: Product) => void
   onInc: (id: string) => void
   onDec: (id: string) => void
   onRemove: (id: string) => void
@@ -42,6 +47,7 @@ export function ScannerScreen({
   const { total } = cartTotals(cart)
   const count = cartCount(cart)
   const [toast, setToast] = useState<string | null>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     if (!lastScanned) return
@@ -64,7 +70,14 @@ export function ScannerScreen({
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </button>
           <p className="text-base font-extrabold">Compra Exprés</p>
-          <span className="w-9" />
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Buscar producto por nombre o pasillo"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground transition active:scale-95 hover:bg-primary-foreground/20"
+          >
+            <Search className="h-4 w-4" />
+          </button>
         </div>
 
         <button
@@ -160,6 +173,15 @@ export function ScannerScreen({
           <ChevronRight className="h-5 w-5" aria-hidden />
         </button>
       </div>
+
+      {searchOpen && (
+        <ProductSearchModal
+          onAddProduct={(p) => {
+            onAddToCart?.(p)
+          }}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
     </div>
   )
 }

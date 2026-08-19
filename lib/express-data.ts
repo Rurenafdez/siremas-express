@@ -1,3 +1,5 @@
+export type PromoType = "rebaja" | "2x1" | "puntos" | "none"
+
 export type Product = {
   id: string
   name: string
@@ -9,6 +11,14 @@ export type Product = {
   originalPrice?: number
   /** Short reason shown next to a discounted line */
   savingReason?: string
+  /** Physical aisle location in La Sirena store */
+  aisle: string
+  /** Whether the product is a store brand (marca propia / blanca La Sirena) */
+  isStoreBrand?: boolean
+  /** Brand name (e.g. "Wala", "First Class", "Frito Lay") */
+  brand?: string
+  /** Category / promo type */
+  promoType?: PromoType
 }
 
 export type CartLine = Product & { qty: number }
@@ -21,6 +31,9 @@ export const CATALOG: Product[] = [
     detail: "Botella 500 ml",
     image: "/products/jugo-wala.png",
     price: 75,
+    aisle: "Pasillo 1 — Bebidas y Jugos",
+    isStoreBrand: true,
+    brand: "Wala",
   },
   {
     id: "galletas-wala",
@@ -28,6 +41,9 @@ export const CATALOG: Product[] = [
     detail: "Paquete 200 g",
     image: "/products/galletas.png",
     price: 85,
+    aisle: "Pasillo 2 — Galletas y Snacks",
+    isStoreBrand: true,
+    brand: "Wala",
   },
   {
     id: "agua",
@@ -35,6 +51,7 @@ export const CATALOG: Product[] = [
     detail: "Botella 1 L",
     image: "/products/agua.png",
     price: 40,
+    aisle: "Pasillo 1 — Bebidas y Jugos",
   },
   {
     id: "chocolate",
@@ -42,6 +59,7 @@ export const CATALOG: Product[] = [
     detail: "Barra 90 g",
     image: "/products/chocolate.png",
     price: 95,
+    aisle: "Pasillo 5 — Dulces y Chocolates",
   },
 ]
 
@@ -52,20 +70,25 @@ export const UNAVAILABLE: Product = {
   detail: "Papitas fritas 150 g",
   image: "/products/papitas-fritolay.png",
   price: 120,
+  aisle: "Pasillo 4 — Snacks y Papitas",
+  brand: "Frito Lay",
 }
 
-/** Smart substitute suggested for the unavailable product. */
+/** Smart substitute suggested for the unavailable product: store brand Wala. */
 export const SUBSTITUTE: Product = {
   id: "papitas-wala",
   name: "Wala Papitas Originales",
-  detail: "Papitas fritas 150 g",
+  detail: "Papitas fritas 150 g · Marca propia",
   image: "/products/papitas-wala.png",
   price: 85,
   originalPrice: 120,
   savingReason: "Alternativa Wala",
+  aisle: "Pasillo 4 — Snacks y Papitas",
+  isStoreBrand: true,
+  brand: "Wala",
 }
 
-/** Smart promo: item close to expiring, deep discount. */
+/** Smart promo: item close to expiring, deep discount ("En rebaja"). */
 export const PROMO: Product = {
   id: "jamon-cibao",
   name: "Jamón Cibao",
@@ -73,7 +96,66 @@ export const PROMO: Product = {
   image: "/products/jamon.png",
   price: 90,
   originalPrice: 150,
-  savingReason: "Precio Compra Exprés",
+  savingReason: "En rebaja",
+  promoType: "rebaja",
+  aisle: "Pasillo 7 — Lácteos y Embutidos",
+  brand: "Cibao",
+}
+
+/** Extended catalog for instant search in store */
+export const ALL_STORE_PRODUCTS: Product[] = [
+  ...CATALOG,
+  SUBSTITUTE,
+  PROMO,
+  {
+    id: "leche-rica",
+    name: "Leche Rica Entera",
+    detail: "Tetra Pak 1 Litro",
+    image: "/products/agua.png",
+    price: 80,
+    aisle: "Pasillo 7 — Lácteos y Embutidos",
+    brand: "Rica",
+  },
+  {
+    id: "arroz-la-garza",
+    name: "Arroz La Garza Premium",
+    detail: "Funda 2 Libras",
+    image: "/products/galletas.png",
+    price: 95,
+    aisle: "Pasillo 3 — Arroz y Granos",
+    brand: "La Garza",
+  },
+  {
+    id: "aceite-crisol",
+    name: "Aceite Crisol de Soya",
+    detail: "Botella 500 ml",
+    image: "/products/jugo-wala.png",
+    price: 110,
+    aisle: "Pasillo 6 — Aceites y Condimentos",
+    brand: "Crisol",
+  },
+  {
+    id: "refresco-wala-uva",
+    name: "Refresco Wala Uva",
+    detail: "Botella 2 Litros",
+    image: "/products/jugo-wala.png",
+    price: 65,
+    aisle: "Pasillo 1 — Bebidas y Jugos",
+    isStoreBrand: true,
+    brand: "Wala",
+  },
+]
+
+export function searchProducts(query: string): Product[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return ALL_STORE_PRODUCTS
+  return ALL_STORE_PRODUCTS.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.detail.toLowerCase().includes(q) ||
+      p.aisle.toLowerCase().includes(q) ||
+      (p.brand && p.brand.toLowerCase().includes(q)),
+  )
 }
 
 export function formatDOP(value: number): string {
@@ -96,11 +178,18 @@ export function cartCount(lines: CartLine[]): number {
   return lines.reduce((n, l) => n + l.qty, 0)
 }
 
+export function calculateSavingsEnRebaja(lines: CartLine[]): number {
+  return lines
+    .filter((l) => l.promoType === "rebaja" || l.savingReason?.toLowerCase().includes("rebaja"))
+    .reduce((s, l) => s + lineSaving(l), 0)
+}
+
 export function cartTotals(lines: CartLine[]) {
   const subtotal = lines.reduce((s, l) => s + lineRegular(l), 0)
   const discounts = lines.reduce((s, l) => s + lineSaving(l), 0)
+  const savingsEnRebaja = calculateSavingsEnRebaja(lines)
   const total = subtotal - discounts
-  return { subtotal, discounts, total }
+  return { subtotal, discounts, savingsEnRebaja, total }
 }
 
 export type ScanStep =
@@ -115,3 +204,28 @@ export const DEMO_SCAN_STEPS: ScanStep[] = [
   { type: "product", product: CATALOG[3] }, // Chocolate Dominicano
 ]
 
+export type AiScenarioId = "happy" | "not_visible" | "extra_item"
+
+export type AiScenario = {
+  id: AiScenarioId
+  name: string
+  description: string
+}
+
+export const AI_VERIFY_SCENARIOS: AiScenario[] = [
+  {
+    id: "happy",
+    name: "Camino Feliz (100% verificado)",
+    description: "La cámara reconoce todos los productos de tu carrito sin discrepancias.",
+  },
+  {
+    id: "not_visible",
+    name: "Discrepancia: Producto no visible",
+    description: "Uno de los productos escaneados está oculto o no se distingue con claridad.",
+  },
+  {
+    id: "extra_item",
+    name: "Discrepancia: Producto no escaneado",
+    description: "La cámara detecta un artículo en la cesta que no fue registrado en el carrito.",
+  },
+]

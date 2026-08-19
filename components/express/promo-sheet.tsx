@@ -19,12 +19,12 @@ export function PromoSheet({
   return (
     <BottomSheet onClose={onClose} labelledBy="promo-title">
       <div className="flex items-center gap-2 text-secondary-foreground">
-        <span className="flex h-7 items-center gap-1 rounded-full bg-secondary px-2.5 text-[11px] font-bold uppercase tracking-wide">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden /> Oferta para ti
+        <span className="flex h-7 items-center gap-1 rounded-full bg-sirena-yellow px-2.5 text-[11px] font-bold uppercase tracking-wide text-sirena-navy-deep">
+          <Clock className="h-3.5 w-3.5" aria-hidden /> En rebaja
         </span>
       </div>
       <h2 id="promo-title" className="mt-3 text-lg font-extrabold text-foreground">
-        Aprovecha antes de que se acabe
+        Producto próximo a vencer · Ahorro directo
       </h2>
 
       <div className="mt-4 flex items-center gap-4 rounded-2xl bg-muted p-3">

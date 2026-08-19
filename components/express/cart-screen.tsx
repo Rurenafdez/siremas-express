@@ -1,13 +1,19 @@
-import { ArrowLeft, QrCode, Tag } from "lucide-react"
+"use client"
+
+import { useState } from "react"
+import { ArrowLeft, QrCode, Tag, Search } from "lucide-react"
 import {
   type CartLine,
+  type Product,
   cartTotals,
   formatDOP,
 } from "@/lib/express-data"
 import { CartRow } from "./cart-row"
+import { ProductSearchModal } from "./product-search-modal"
 
 export function CartScreen({
   cart,
+  onAddToCart,
   onInc,
   onDec,
   onRemove,
@@ -15,6 +21,7 @@ export function CartScreen({
   onBack,
 }: {
   cart: CartLine[]
+  onAddToCart?: (product: Product) => void
   onInc: (id: string) => void
   onDec: (id: string) => void
   onRemove: (id: string) => void
@@ -22,35 +29,52 @@ export function CartScreen({
   onBack: () => void
 }) {
   const { subtotal, discounts, total } = cartTotals(cart)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   return (
     <div className="flex h-full flex-col bg-background">
       <div className="bg-card">
-        <header className="flex items-center gap-3 px-5 py-4 border-b border-border">
+        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Volver"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted transition active:scale-95"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden />
+            </button>
+            <h1 className="text-lg font-extrabold text-foreground">
+              Resumen de tu compra
+            </h1>
+          </div>
           <button
             type="button"
-            onClick={onBack}
-            aria-label="Volver"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted transition active:scale-95"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Buscar producto para agregar"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground transition active:scale-95 hover:bg-primary hover:text-primary-foreground"
           >
-            <ArrowLeft className="h-5 w-5" aria-hidden />
+            <Search className="h-4 w-4" />
           </button>
-          <h1 className="text-lg font-extrabold text-foreground">
-            Resumen de tu compra
-          </h1>
         </header>
       </div>
 
       <div className="no-scrollbar flex-1 space-y-2.5 overflow-y-auto px-5 py-4">
-        {cart.map((line) => (
-          <CartRow
-            key={line.id}
-            line={line}
-            onInc={onInc}
-            onDec={onDec}
-            onRemove={onRemove}
-          />
-        ))}
+        {cart.length === 0 ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            No tienes productos en el carrito.
+          </div>
+        ) : (
+          cart.map((line) => (
+            <CartRow
+              key={line.id}
+              line={line}
+              onInc={onInc}
+              onDec={onDec}
+              onRemove={onRemove}
+            />
+          ))
+        )}
       </div>
 
       {/* Totals */}
@@ -90,12 +114,20 @@ export function CartScreen({
         <button
           type="button"
           onClick={onVerify}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground transition active:scale-[0.99]"
+          disabled={cart.length === 0}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground transition active:scale-[0.99] disabled:opacity-40"
         >
           <QrCode className="h-5 w-5 text-secondary" aria-hidden />
           Generar Pase QR
         </button>
       </div>
+
+      {searchOpen && (
+        <ProductSearchModal
+          onAddProduct={(p) => onAddToCart?.(p)}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
     </div>
   )
 }

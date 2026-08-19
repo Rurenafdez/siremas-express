@@ -70,14 +70,18 @@ const PROMOS: PromoInfo[] = [
 
 export function HomeScreen({
   userName = "Camila Ramírez",
+  points = 2450,
   cart = [],
   onStart,
   onViewCart,
+  onViewHistory,
 }: {
   userName?: string
+  points?: number
   cart?: CartLine[]
   onStart: () => void
   onViewCart?: () => void
+  onViewHistory?: () => void
 }) {
   const first = userName.split(" ")[0]
   const count = cartCount(cart)
@@ -97,40 +101,58 @@ export function HomeScreen({
               <p className="text-sm font-bold">{first}</p>
             </div>
           </div>
-          <button
-            type="button"
-            aria-label="Notificaciones"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/10"
-          >
-            <Bell className="h-5 w-5" aria-hidden />
-            <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-secondary" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onViewHistory}
+              aria-label="Historial de compras"
+              className="flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5 text-xs font-bold text-primary-foreground transition active:scale-95 hover:bg-primary-foreground/20"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-secondary" />
+              <span>Historial</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Notificaciones"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10"
+            >
+              <Bell className="h-4 w-4" aria-hidden />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-secondary" />
+            </button>
+          </div>
         </header>
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6">
-        {/* Savings + cart quick stats */}
+        {/* Points & Savings banner */}
         <div className="-mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
+          <div className="rounded-2xl bg-card p-3.5 shadow-sm ring-1 ring-border">
             <div className="flex items-center gap-1.5 text-sirena-green">
               <Tag className="h-4 w-4" aria-hidden />
               <span className="text-xs font-semibold">Ahorro acumulado</span>
             </div>
-            <p className="mt-1 text-2xl font-extrabold tabular-nums text-foreground">
+            <p className="mt-1 text-xl font-extrabold tabular-nums text-foreground">
               {formatDOP(savings)}
+            </p>
+            <p className="mt-1 text-[11px] font-bold text-amber-600 flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              {points.toLocaleString("es-DO")} pts Siremás
             </p>
           </div>
           <button
             type="button"
             onClick={count > 0 && onViewCart ? onViewCart : onStart}
-            className="rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition active:scale-[0.98]"
+            className="rounded-2xl bg-card p-3.5 text-left shadow-sm ring-1 ring-border transition active:scale-[0.98]"
           >
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <ShoppingCart className="h-4 w-4" aria-hidden />
               <span className="text-xs font-semibold">Tu carrito</span>
             </div>
-            <p className="mt-1 text-2xl font-extrabold tabular-nums text-foreground">
+            <p className="mt-1 text-xl font-extrabold tabular-nums text-foreground">
               {count} <span className="text-sm font-medium text-muted-foreground">art.</span>
+            </p>
+            <p className="mt-1 text-[11px] font-semibold text-primary">
+              {count > 0 ? "Ver resumen →" : "Escanear ahora"}
             </p>
           </button>
         </div>

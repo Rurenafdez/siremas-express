@@ -1,7 +1,5 @@
-"use client"
-
 import Image from "next/image"
-import { TriangleAlert, ArrowRight, Tag, Plus } from "lucide-react"
+import { TriangleAlert, ArrowRight, Tag, Plus, Sparkles } from "lucide-react"
 import {
   type Product,
   formatDOP,
@@ -31,7 +29,7 @@ export function UnavailableSheet({
         </h2>
       </div>
       <p className="mt-1 text-sm text-muted-foreground text-pretty">
-        Tenemos una alternativa lista para ti, sin caminar toda la tienda.
+        Este artículo está agotado, pero tenemos una alternativa de <span className="font-semibold text-foreground">marca propia La Sirena (Wala)</span> con la misma calidad.
       </p>
 
       {/* Swap visual: unavailable → substitute */}
@@ -67,10 +65,15 @@ export function UnavailableSheet({
           <p className="mt-1 text-center text-xs font-semibold text-foreground line-clamp-1">
             {substitute.name}
           </p>
-          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-sirena-green px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-            <Tag className="h-3 w-3" aria-hidden />
-            Ahorra {formatDOP(saving)}
-          </span>
+          <div className="mt-1 flex flex-col items-center gap-1">
+            <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground">
+              <Sparkles className="h-2.5 w-2.5" /> Marca propia La Sirena
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-sirena-green px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+              <Tag className="h-3 w-3" aria-hidden />
+              Ahorra {formatDOP(saving)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -90,7 +93,7 @@ export function UnavailableSheet({
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99]"
         >
           <Plus className="h-5 w-5" aria-hidden />
-          Agregar alternativa
+          Agregar marca propia (Ahorra {formatDOP(saving)})
         </button>
         <button
           type="button"

@@ -41,14 +41,20 @@ export function CartRow({
         <p className="truncate text-sm font-semibold text-foreground">
           {line.name}
         </p>
-        {saving > 0 ? (
-          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-1.5 py-0.5 text-[11px] font-semibold text-sirena-green">
-            <Tag className="h-3 w-3" aria-hidden />
-            Ahorras {formatDOP(saving)}
-          </span>
-        ) : (
-          <p className="truncate text-xs text-muted-foreground">{line.detail}</p>
-        )}
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+          {saving > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-1.5 py-0.5 text-[10px] font-semibold text-sirena-green">
+              <Tag className="h-2.5 w-2.5" aria-hidden />
+              {line.savingReason ?? "Ahorro"} -{formatDOP(saving)}
+            </span>
+          )}
+          {line.isStoreBrand && (
+            <span className="rounded-full bg-sirena-yellow-soft px-1.5 py-0.5 text-[10px] font-bold text-secondary-foreground">
+              Marca propia
+            </span>
+          )}
+        </div>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{line.aisle}</p>
       </div>
 
       <div className="flex flex-col items-end gap-1.5">
