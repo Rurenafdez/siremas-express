@@ -1,8 +1,5 @@
-"use client"
-
 import { Check, Tag, Timer, Receipt } from "lucide-react"
 import { type CartLine, cartTotals, formatDOP } from "@/lib/express-data"
-import { StatusBar } from "./status-bar"
 
 const TIME_SAVED_MIN = 12
 
@@ -19,7 +16,6 @@ export function SuccessScreen({
 
   return (
     <div className="flex h-full flex-col bg-sirena-green text-primary-foreground">
-      <StatusBar dark />
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
         <div className="animate-pop-in flex h-24 w-24 items-center justify-center rounded-full bg-primary-foreground/15">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-foreground">

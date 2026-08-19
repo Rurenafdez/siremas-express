@@ -1,7 +1,4 @@
-"use client"
-
 import { ScanBarcode, ShieldCheck, Wallet, ArrowLeft } from "lucide-react"
-import { StatusBar } from "./status-bar"
 
 const STEPS = [
   {
@@ -12,7 +9,7 @@ const STEPS = [
   {
     icon: ShieldCheck,
     title: "Verifica tu compra",
-    body: "Nuestra IA confirma que todo coincide.",
+    body: "Genera tu pase QR y confirma con nuestra IA.",
   },
   {
     icon: Wallet,
@@ -30,13 +27,12 @@ export function IntroScreen({
 }) {
   return (
     <div className="flex h-full flex-col bg-primary text-primary-foreground">
-      <StatusBar dark />
-      <div className="px-5 pt-1">
+      <div className="px-5 py-4">
         <button
           type="button"
           onClick={onBack}
           aria-label="Volver"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/10"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/10 transition active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden />
         </button>

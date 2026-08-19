@@ -14,7 +14,6 @@ import {
   cartTotals,
   formatDOP,
 } from "@/lib/express-data"
-import { StatusBar } from "./status-bar"
 import { CartRow } from "./cart-row"
 
 export function ScannerScreen({
@@ -55,17 +54,16 @@ export function ScannerScreen({
     <div className="flex h-full flex-col bg-background">
       {/* Camera viewfinder */}
       <div className="relative bg-sirena-navy-deep text-primary-foreground">
-        <StatusBar dark />
-        <div className="flex items-center justify-between px-5 pb-2 pt-1">
+        <div className="flex items-center justify-between px-5 py-4">
           <button
             type="button"
             onClick={onBack}
             aria-label="Volver"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10 transition active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </button>
-          <p className="text-sm font-bold">Compra Exprés</p>
+          <p className="text-base font-extrabold">Compra Exprés</p>
           <span className="w-9" />
         </div>
 

@@ -121,7 +121,7 @@ export function SiremasApp() {
     setScreen("intro")
   }
 
-  function handleVerified() {
+  function handleGoToQr() {
     setOrderId("LS-" + Math.floor(100000 + Math.random() * 900000))
     setScreen("qr")
   }
@@ -175,16 +175,8 @@ export function SiremasApp() {
           onInc={handleInc}
           onDec={handleDec}
           onRemove={handleRemove}
-          onVerify={() => setScreen("ai-verify")}
+          onVerify={handleGoToQr}
           onBack={() => setScreen("scan")}
-        />
-      )}
-
-      {screen === "ai-verify" && (
-        <VerifyScreen
-          cart={cart}
-          onVerified={handleVerified}
-          onBack={() => setScreen("cart")}
         />
       )}
 
@@ -192,8 +184,16 @@ export function SiremasApp() {
         <QrScreen
           cart={cart}
           orderId={orderId}
-          onArrive={() => setScreen("station")}
-          onBack={() => setScreen("ai-verify")}
+          onArrive={() => setScreen("ai-verify")}
+          onBack={() => setScreen("cart")}
+        />
+      )}
+
+      {screen === "ai-verify" && (
+        <VerifyScreen
+          cart={cart}
+          onVerified={() => setScreen("station")}
+          onBack={() => setScreen("qr")}
         />
       )}
 
@@ -201,7 +201,7 @@ export function SiremasApp() {
         <StationScreen
           cart={cart}
           onPay={() => setScreen("payment")}
-          onBack={() => setScreen("qr")}
+          onBack={() => setScreen("ai-verify")}
         />
       )}
 

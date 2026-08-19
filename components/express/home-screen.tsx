@@ -15,7 +15,6 @@ import {
   cartTotals,
   formatDOP,
 } from "@/lib/express-data"
-import { StatusBar } from "./status-bar"
 
 export function HomeScreen({
   userName = "Camila Ramírez",
@@ -35,8 +34,7 @@ export function HomeScreen({
   return (
     <div className="flex h-full flex-col bg-background">
       <div className="bg-primary text-primary-foreground">
-        <StatusBar dark />
-        <header className="flex items-center justify-between px-5 pb-5 pt-1">
+        <header className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
               <CircleUser className="h-6 w-6" aria-hidden />

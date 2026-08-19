@@ -1,12 +1,9 @@
-"use client"
-
-import { ArrowLeft, ShieldCheck, Tag } from "lucide-react"
+import { ArrowLeft, QrCode, Tag } from "lucide-react"
 import {
   type CartLine,
   cartTotals,
   formatDOP,
 } from "@/lib/express-data"
-import { StatusBar } from "./status-bar"
 import { CartRow } from "./cart-row"
 
 export function CartScreen({
@@ -29,13 +26,12 @@ export function CartScreen({
   return (
     <div className="flex h-full flex-col bg-background">
       <div className="bg-card">
-        <StatusBar />
-        <header className="flex items-center gap-3 px-5 pb-3 pt-1">
+        <header className="flex items-center gap-3 px-5 py-4 border-b border-border">
           <button
             type="button"
             onClick={onBack}
             aria-label="Volver"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted transition active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </button>
@@ -94,10 +90,10 @@ export function CartScreen({
         <button
           type="button"
           onClick={onVerify}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground transition active:scale-[0.99]"
         >
-          <ShieldCheck className="h-5 w-5" aria-hidden />
-          Verificar compra
+          <QrCode className="h-5 w-5 text-secondary" aria-hidden />
+          Generar Pase QR
         </button>
       </div>
     </div>
