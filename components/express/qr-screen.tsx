@@ -71,7 +71,7 @@ export function QrScreen({
             <Store className="h-5 w-5" aria-hidden />
           </div>
           <p className="text-xs text-muted-foreground text-pretty">
-            Siguiente paso: Confirma tus productos con la cámara de IA antes de la estación.
+            Siguiente paso: Confirma tus productos con la cámara de IA antes de realizar el pago.
           </p>
         </div>
 

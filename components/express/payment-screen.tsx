@@ -21,12 +21,6 @@ const METHODS = [
     badge: "Recomendado",
   },
   {
-    id: "coupon",
-    icon: Ticket,
-    title: "Cupón La Sirena",
-    subtitle: "Aplicar código de descuento",
-  },
-  {
     id: "saved",
     icon: CreditCard,
     title: "Visa •••• 4821",

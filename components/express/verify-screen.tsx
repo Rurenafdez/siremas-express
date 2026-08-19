@@ -3,7 +3,7 @@ import {
   ArrowLeft,
   Camera,
   Check,
-  Store,
+  CreditCard,
   Sparkles,
   ChevronRight,
 } from "lucide-react"
@@ -167,8 +167,8 @@ export function VerifyScreen({
             onClick={onVerified}
             className="animate-slide-up flex w-full items-center justify-center gap-2 rounded-2xl bg-sirena-green py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99]"
           >
-            <Store className="h-5 w-5" aria-hidden />
-            Continuar a Estación de Salida
+            <CreditCard className="h-5 w-5" aria-hidden />
+            Continuar al pago
             <ChevronRight className="h-5 w-5" aria-hidden />
           </button>
         )}

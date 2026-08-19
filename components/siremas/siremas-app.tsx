@@ -28,9 +28,8 @@ type Screen =
   | "intro"
   | "scan"
   | "cart"
-  | "ai-verify"
   | "qr"
-  | "station"
+  | "ai-verify"
   | "payment"
   | "success"
 
@@ -192,16 +191,8 @@ export function SiremasApp() {
       {screen === "ai-verify" && (
         <VerifyScreen
           cart={cart}
-          onVerified={() => setScreen("station")}
+          onVerified={() => setScreen("payment")}
           onBack={() => setScreen("qr")}
-        />
-      )}
-
-      {screen === "station" && (
-        <StationScreen
-          cart={cart}
-          onPay={() => setScreen("payment")}
-          onBack={() => setScreen("ai-verify")}
         />
       )}
 
@@ -209,7 +200,7 @@ export function SiremasApp() {
         <PaymentScreen
           cart={cart}
           onPaid={() => setScreen("success")}
-          onBack={() => setScreen("station")}
+          onBack={() => setScreen("ai-verify")}
         />
       )}
 
