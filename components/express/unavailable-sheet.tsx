@@ -1,0 +1,105 @@
+"use client"
+
+import Image from "next/image"
+import { TriangleAlert, ArrowRight, Tag, Plus } from "lucide-react"
+import {
+  type Product,
+  formatDOP,
+  lineSaving,
+} from "@/lib/express-data"
+import { BottomSheet } from "./bottom-sheet"
+
+export function UnavailableSheet({
+  unavailable,
+  substitute,
+  onAdd,
+  onClose,
+}: {
+  unavailable: Product
+  substitute: Product
+  onAdd: () => void
+  onClose: () => void
+}) {
+  const saving = lineSaving({ ...substitute, qty: 1 })
+
+  return (
+    <BottomSheet onClose={onClose} labelledBy="unavailable-title">
+      <div className="flex items-center gap-2 text-destructive">
+        <TriangleAlert className="h-5 w-5" aria-hidden />
+        <h2 id="unavailable-title" className="text-lg font-extrabold">
+          Producto no disponible
+        </h2>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground text-pretty">
+        Tenemos una alternativa lista para ti, sin caminar toda la tienda.
+      </p>
+
+      {/* Swap visual: unavailable → substitute */}
+      <div className="mt-4 flex items-center gap-3">
+        <div className="flex flex-1 flex-col items-center rounded-2xl bg-muted p-3 opacity-70">
+          <div className="relative h-16 w-16">
+            <Image
+              src={unavailable.image || "/placeholder.svg"}
+              alt={unavailable.name}
+              fill
+              className="object-contain grayscale"
+            />
+          </div>
+          <p className="mt-1 text-center text-xs font-semibold text-foreground line-clamp-1">
+            {unavailable.name}
+          </p>
+          <span className="mt-0.5 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive">
+            Agotado
+          </span>
+        </div>
+
+        <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+
+        <div className="flex flex-1 flex-col items-center rounded-2xl bg-sirena-green-soft p-3 ring-1 ring-sirena-green/30">
+          <div className="relative h-16 w-16">
+            <Image
+              src={substitute.image || "/placeholder.svg"}
+              alt={substitute.name}
+              fill
+              className="object-contain"
+            />
+          </div>
+          <p className="mt-1 text-center text-xs font-semibold text-foreground line-clamp-1">
+            {substitute.name}
+          </p>
+          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-sirena-green px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+            <Tag className="h-3 w-3" aria-hidden />
+            Ahorra {formatDOP(saving)}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-baseline justify-center gap-2">
+        <span className="text-sm text-muted-foreground line-through">
+          {formatDOP(substitute.originalPrice ?? substitute.price)}
+        </span>
+        <span className="text-2xl font-extrabold tabular-nums text-foreground">
+          {formatDOP(substitute.price)}
+        </span>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        <button
+          type="button"
+          onClick={onAdd}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99]"
+        >
+          <Plus className="h-5 w-5" aria-hidden />
+          Agregar alternativa
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full rounded-2xl py-2.5 text-sm font-semibold text-muted-foreground"
+        >
+          No, gracias
+        </button>
+      </div>
+    </BottomSheet>
+  )
+}
