@@ -23,6 +23,7 @@ import {
   addCard as addCardToDb,
   createOrder,
   getOrders,
+  resetDemoUser,
 } from "@/lib/db/repository"
 import { HomeScreen } from "@/components/express/home-screen"
 import { IntroScreen } from "@/components/express/intro-screen"
@@ -195,6 +196,13 @@ export function SiremasApp() {
     setScreen("home")
   }
 
+  function handleResetDemo() {
+    const unonboarded = resetDemoUser()
+    setUser(unonboarded)
+    setOrders([])
+    handleReset()
+  }
+
   // If user hasn't accepted terms or verified cédula, show Onboarding
   if (user && (!user.hasAcceptedTerms || !user.cedulaVerified)) {
     return (
@@ -217,6 +225,7 @@ export function SiremasApp() {
             setOrders(getOrders())
             setScreen("history")
           }}
+          onResetDemo={handleResetDemo}
         />
       )}
 

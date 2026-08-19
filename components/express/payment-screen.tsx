@@ -43,7 +43,8 @@ export function PaymentScreen({
   ]
   const defaultCard = savedCards[0]
 
-  const [selected, setSelected] = useState<"siremas_points" | "saved" | "other">("siremas_points")
+  // Pre-selected as "saved" (card) per requirement 13
+  const [selected, setSelected] = useState<"saved" | "siremas_points" | "other">("saved")
   const [selectedCardId, setSelectedCardId] = useState<string>(defaultCard.id)
   const [processing, setProcessing] = useState(false)
   const [showAddCard, setShowAddCard] = useState(false)
@@ -52,7 +53,7 @@ export function PaymentScreen({
 
   const activeCard = customCard || savedCards.find((c) => c.id === selectedCardId) || defaultCard
 
-  // Split calculations
+  // Split calculations if user chooses points
   const pointsCoverAll = userPoints >= total
   const pointsUsed = pointsCoverAll ? total : userPoints
   const cardRemainder = pointsCoverAll ? 0 : total - userPoints
@@ -133,7 +134,55 @@ export function PaymentScreen({
 
         {/* Methods Selection */}
         <div className="space-y-2.5">
-          {/* Option 1: Puntos Siremás */}
+          {/* Option 1: Saved Card (Marked as RECOMMENDED per requirement 13) */}
+          <div
+            className={`w-full rounded-2xl bg-card p-3.5 ring-1 transition ${
+              selected === "saved" ? "ring-2 ring-primary bg-primary/5" : "ring-border"
+            }`}
+          >
+            <div
+              onClick={() => setSelected("saved")}
+              className="flex items-center gap-3 w-full cursor-pointer"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
+                <CreditCard className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-foreground">
+                    {customCard ? `${customCard.brand} •••• ${customCard.last4}` : `${activeCard.brand} •••• ${activeCard.last4}`}
+                  </p>
+                  <span className="rounded-full bg-sirena-yellow px-2 py-0.5 text-[10px] font-extrabold text-sirena-navy-deep">
+                    Recomendado
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">Tarjeta de crédito guardada</p>
+              </div>
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                  selected === "saved"
+                    ? "bg-primary text-primary-foreground"
+                    : "ring-1 ring-border"
+                }`}
+              >
+                {selected === "saved" && <Check className="h-3.5 w-3.5" />}
+              </span>
+            </div>
+
+            {/* Add Card Button inside card box */}
+            <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2.5">
+              <button
+                type="button"
+                onClick={() => setShowAddCard(true)}
+                className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Agregar otra tarjeta
+              </button>
+            </div>
+          </div>
+
+          {/* Option 2: Puntos Siremás */}
           <button
             type="button"
             onClick={() => setSelected("siremas_points")}
@@ -148,14 +197,11 @@ export function PaymentScreen({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-foreground">Puntos Siremás</p>
-                  <span className="rounded-full bg-sirena-yellow px-2 py-0.5 text-[10px] font-extrabold text-sirena-navy-deep">
-                    Recomendado
-                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {pointsCoverAll
-                    ? `${userPoints.toLocaleString("es-DO")} pts disponibles · Cubre el 100%`
-                    : `${userPoints.toLocaleString("es-DO")} pts disponibles · Pago dividido`}
+                    ? `${userPoints.toLocaleString("es-DO")} pts disponibles · Cubre el total`
+                    : `${userPoints.toLocaleString("es-DO")} pts disponibles · Pago combinado`}
                 </p>
               </div>
               <span
@@ -180,55 +226,12 @@ export function PaymentScreen({
                   <div className="space-y-0.5 text-[11px]">
                     <p className="text-foreground font-semibold">Desglose combinado:</p>
                     <p>• {pointsUsed} Puntos Siremás: <span className="font-bold text-sirena-green">-RD${pointsUsed}</span></p>
-                    <p>• Restante cargado a {activeCard.brand} •••• {activeCard.last4}: <span className="font-bold text-foreground">RD${cardRemainder}</span></p>
+                    <p>• Restante a {activeCard.brand} •••• {activeCard.last4}: <span className="font-bold text-foreground">RD${cardRemainder}</span></p>
                   </div>
                 )}
               </div>
             )}
           </button>
-
-          {/* Option 2: Saved Cards */}
-          <div
-            className={`w-full rounded-2xl bg-card p-3.5 ring-1 transition ${
-              selected === "saved" ? "ring-2 ring-primary bg-primary/5" : "ring-border"
-            }`}
-          >
-            <div
-              onClick={() => setSelected("saved")}
-              className="flex items-center gap-3 w-full cursor-pointer"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
-                <CreditCard className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground">
-                  {customCard ? `${customCard.brand} •••• ${customCard.last4}` : `${activeCard.brand} •••• ${activeCard.last4}`}
-                </p>
-                <p className="text-xs text-muted-foreground">Tarjeta de crédito guardada</p>
-              </div>
-              <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                  selected === "saved"
-                    ? "bg-primary text-primary-foreground"
-                    : "ring-1 ring-border"
-                }`}
-              >
-                {selected === "saved" && <Check className="h-3.5 w-3.5" />}
-              </span>
-            </div>
-
-            {/* If user has multiple saved cards or wants to add one */}
-            <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2.5">
-              <button
-                type="button"
-                onClick={() => setShowAddCard(true)}
-                className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Agregar otra tarjeta
-              </button>
-            </div>
-          </div>
 
           {/* Option 3: Other Methods */}
           <button
@@ -272,7 +275,7 @@ export function PaymentScreen({
             ? pointsCoverAll
               ? `Pagar con ${pointsUsed} pts Siremás`
               : `Pagar (${pointsUsed} pts + RD$${cardRemainder})`
-            : `Pagar ${formatDOP(total)}`}
+            : `Pagar con ${activeCard.brand} •••• ${activeCard.last4} (${formatDOP(total)})`}
         </button>
       </div>
 

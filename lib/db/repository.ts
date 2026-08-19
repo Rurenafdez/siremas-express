@@ -4,6 +4,8 @@ import {
   saveUserToStorage,
   loadOrdersFromStorage,
   saveOrdersToStorage,
+  resetDemoStorage,
+  SEED_USER,
 } from "./storage"
 import { type CartLine } from "@/lib/express-data"
 
@@ -100,4 +102,16 @@ export function createOrder({
   }
 
   return newOrder
+}
+
+export function resetDemoUser(): User {
+  resetDemoStorage()
+  const unonboardedUser: User = {
+    ...SEED_USER,
+    hasAcceptedTerms: false,
+    cedulaVerified: false,
+    cedula: "",
+  }
+  saveUserToStorage(unonboardedUser)
+  return unonboardedUser
 }

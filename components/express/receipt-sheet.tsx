@@ -118,7 +118,7 @@ export function ReceiptSheet({
         {savingsEnRebaja > 0 && (
           <div className="flex justify-between text-amber-700 font-bold bg-amber-500/10 px-2 py-1 rounded-lg">
             <span className="inline-flex items-center gap-1">
-              <Clock className="h-3 w-3" /> Ahorro &ldquo;En rebaja&rdquo; (próximo a vencer)
+              <Tag className="h-3 w-3" /> Ahorro &ldquo;En rebaja&rdquo;
             </span>
             <span>-{formatDOP(savingsEnRebaja)}</span>
           </div>

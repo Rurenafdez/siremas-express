@@ -1,5 +1,7 @@
+"use client"
+
 import Image from "next/image"
-import { TriangleAlert, ArrowRight, Tag, Plus, Sparkles } from "lucide-react"
+import { ArrowRight, Tag, Plus, Sparkles } from "lucide-react"
 import {
   type Product,
   formatDOP,
@@ -21,33 +23,33 @@ export function UnavailableSheet({
   const saving = lineSaving({ ...substitute, qty: 1 })
 
   return (
-    <BottomSheet onClose={onClose} labelledBy="unavailable-title">
-      <div className="flex items-center gap-2 text-destructive">
-        <TriangleAlert className="h-5 w-5" aria-hidden />
-        <h2 id="unavailable-title" className="text-lg font-extrabold">
-          Producto no disponible
+    <BottomSheet onClose={onClose} labelledBy="similar-product-title">
+      <div className="flex items-center gap-2 text-primary">
+        <Sparkles className="h-5 w-5 text-secondary" aria-hidden />
+        <h2 id="similar-product-title" className="text-lg font-extrabold text-foreground">
+          Producto similar
         </h2>
       </div>
       <p className="mt-1 text-sm text-muted-foreground text-pretty">
-        Este artículo está agotado, pero tenemos una alternativa de <span className="font-semibold text-foreground">marca propia La Sirena (Wala)</span> con la misma calidad.
+        Encontramos una alternativa de <span className="font-semibold text-foreground">marca propia La Sirena (Wala)</span> con la misma calidad a un mejor precio.
       </p>
 
-      {/* Swap visual: unavailable → substitute */}
+      {/* Swap visual: original → similar substitute */}
       <div className="mt-4 flex items-center gap-3">
-        <div className="flex flex-1 flex-col items-center rounded-2xl bg-muted p-3 opacity-70">
+        <div className="flex flex-1 flex-col items-center rounded-2xl bg-muted p-3 opacity-75">
           <div className="relative h-16 w-16">
             <Image
               src={unavailable.image || "/placeholder.svg"}
               alt={unavailable.name}
               fill
-              className="object-contain grayscale"
+              className="object-contain"
             />
           </div>
           <p className="mt-1 text-center text-xs font-semibold text-foreground line-clamp-1">
             {unavailable.name}
           </p>
-          <span className="mt-0.5 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive">
-            Agotado
+          <span className="mt-0.5 rounded-full bg-muted-foreground/15 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+            Original
           </span>
         </div>
 
@@ -90,15 +92,15 @@ export function UnavailableSheet({
         <button
           type="button"
           onClick={onAdd}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99] transition"
         >
           <Plus className="h-5 w-5" aria-hidden />
-          Agregar marca propia (Ahorra {formatDOP(saving)})
+          Agregar producto similar (Ahorra {formatDOP(saving)})
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="w-full rounded-2xl py-2.5 text-sm font-semibold text-muted-foreground"
+          className="w-full rounded-2xl py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
         >
           No, gracias
         </button>

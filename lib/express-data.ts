@@ -69,33 +69,33 @@ export const UNAVAILABLE: Product = {
   name: "Frito Lay Original",
   detail: "Papitas fritas 150 g",
   image: "/products/papitas-fritolay.png",
-  price: 120,
+  price: 100,
   aisle: "Pasillo 4 — Snacks y Papitas",
   brand: "Frito Lay",
 }
 
-/** Smart substitute suggested for the unavailable product: store brand Wala. */
+/** Smart substitute suggested for the unavailable product: store brand Wala (15% savings). */
 export const SUBSTITUTE: Product = {
   id: "papitas-wala",
   name: "Wala Papitas Originales",
   detail: "Papitas fritas 150 g · Marca propia",
   image: "/products/papitas-wala.png",
   price: 85,
-  originalPrice: 120,
+  originalPrice: 100,
   savingReason: "Alternativa Wala",
   aisle: "Pasillo 4 — Snacks y Papitas",
   isStoreBrand: true,
   brand: "Wala",
 }
 
-/** Smart promo: item close to expiring, deep discount ("En rebaja"). */
+/** Smart promo: item with direct discount ("En rebaja", ~18% savings). */
 export const PROMO: Product = {
   id: "jamon-cibao",
   name: "Jamón Cibao",
-  detail: "Paquete 250 g · próximo a vencer",
+  detail: "Paquete 250 g · Selección especial",
   image: "/products/jamon.png",
   price: 90,
-  originalPrice: 150,
+  originalPrice: 110,
   savingReason: "En rebaja",
   promoType: "rebaja",
   aisle: "Pasillo 7 — Lácteos y Embutidos",

@@ -1,7 +1,7 @@
 import { User, Order, Card } from "./schema"
 
-const USER_KEY = "siremas_express_user"
-const ORDERS_KEY = "siremas_express_orders"
+const USER_KEY = "siremas_demo_user"
+const ORDERS_KEY = "siremas_demo_orders"
 
 export const DEFAULT_CARDS: Card[] = [
   {
@@ -86,10 +86,10 @@ export const SEED_ORDERS: Order[] = [
       {
         id: "jamon-cibao",
         name: "Jamón Cibao",
-        detail: "Paquete 250 g · próximo a vencer",
+        detail: "Paquete 250 g · Selección especial",
         image: "/products/jamon.png",
         price: 90,
-        originalPrice: 150,
+        originalPrice: 110,
         savingReason: "En rebaja",
         promoType: "rebaja",
         aisle: "Pasillo 7 — Lácteos y Embutidos",
@@ -105,9 +105,9 @@ export const SEED_ORDERS: Order[] = [
         qty: 1,
       },
     ],
-    subtotal: 245,
-    discounts: 60,
-    savingsEnRebaja: 60,
+    subtotal: 205,
+    discounts: 20,
+    savingsEnRebaja: 20,
     total: 185,
     paymentDetails: {
       type: "points",
@@ -168,5 +168,15 @@ export function saveOrdersToStorage(orders: Order[]): void {
     localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))
   } catch (e) {
     console.error("Error saving orders:", e)
+  }
+}
+
+export function resetDemoStorage(): void {
+  if (!isBrowser()) return
+  try {
+    localStorage.removeItem(USER_KEY)
+    localStorage.removeItem(ORDERS_KEY)
+  } catch (e) {
+    console.error("Error resetting storage:", e)
   }
 }
