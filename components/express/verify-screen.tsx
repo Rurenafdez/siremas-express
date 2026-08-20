@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   X,
   ShieldCheck,
+  Trash2,
 } from "lucide-react"
 import {
   type CartLine,
@@ -25,7 +26,7 @@ import {
   formatDOP,
 } from "@/lib/express-data"
 
-type Phase = "idle" | "scanning" | "done" | "discrepancy_not_visible" | "discrepancy_extra_item"
+type Phase = "idle" | "scanning" | "done" | "discrepancy_not_visible"
 
 const EXTRA_PRODUCT: Product = CATALOG[1] || {
   id: "galletas-wala",
@@ -41,11 +42,13 @@ const EXTRA_PRODUCT: Product = CATALOG[1] || {
 export function VerifyScreen({
   cart,
   onAddToCart,
+  onRemoveFromCart,
   onVerified,
   onBack,
 }: {
   cart: CartLine[]
   onAddToCart?: (product: Product) => void
+  onRemoveFromCart?: (productId: string) => void
   onVerified: (photos: string[]) => void
   onBack: () => void
 }) {
@@ -65,7 +68,6 @@ export function VerifyScreen({
   }, [])
 
   function addSnapshot() {
-    // Generate snapshot representation from available products
     const samplePhotos = [
       "/products/jugo-wala.png",
       "/products/galletas.png",
@@ -81,7 +83,6 @@ export function VerifyScreen({
     if (file) {
       const url = URL.createObjectURL(file)
       setPhotos((prev) => [...prev, url])
-      // Trigger AI scan after photo taken
       if (phase === "idle") {
         startScan()
       }
@@ -127,12 +128,17 @@ export function VerifyScreen({
         timers.current.push(t)
       })
     } else if (scenario === "extra_item") {
-      // All cart items recognized + extra item detected
+      // All cart items recognized + automatically add extra item to cart immediately
       items.forEach((_, i) => {
         const t = setTimeout(() => {
           setRecognized((prev) => [...prev, i])
           if (i === items.length - 1) {
-            const done = setTimeout(() => setPhase("discrepancy_extra_item"), 500)
+            const done = setTimeout(() => {
+              // Automatically add to cart without blocking decision modal (Point 1 update)
+              onAddToCart?.(EXTRA_PRODUCT)
+              setExtraAdded(true)
+              setPhase("done")
+            }, 500)
             timers.current.push(done)
           }
         }, 450 * (i + 1))
@@ -141,20 +147,16 @@ export function VerifyScreen({
     }
   }
 
-  function handleAddExtra() {
-    onAddToCart?.(EXTRA_PRODUCT)
-    setExtraAdded(true)
-    setPhase("done")
-  }
-
-  function handleIgnoreExtra() {
-    setPhase("done")
+  function handleRemoveExtra() {
+    onRemoveFromCart?.(EXTRA_PRODUCT.id)
+    setExtraAdded(false)
   }
 
   function handleRetry() {
     setPhase("idle")
     setRecognized([])
     setPhotos([])
+    setExtraAdded(false)
   }
 
   function handleProceedToPayment() {
@@ -230,7 +232,7 @@ export function VerifyScreen({
 
       {/* Camera Viewfinder */}
       <div className="px-5 pt-3">
-        <div className="relative flex aspect-square w-full max-h-[190px] items-center justify-center overflow-hidden rounded-3xl bg-primary/40 ring-1 ring-primary-foreground/10 shadow-inner">
+        <div className="relative flex aspect-square w-full max-h-[185px] items-center justify-center overflow-hidden rounded-3xl bg-primary/40 ring-1 ring-primary-foreground/10 shadow-inner">
           <span className="absolute left-4 top-4 h-7 w-7 rounded-tl-xl border-l-4 border-t-4 border-secondary" />
           <span className="absolute right-4 top-4 h-7 w-7 rounded-tr-xl border-r-4 border-t-4 border-secondary" />
           <span className="absolute bottom-4 left-4 h-7 w-7 rounded-bl-xl border-b-4 border-l-4 border-secondary" />
@@ -246,7 +248,9 @@ export function VerifyScreen({
                 <Check className="h-7 w-7 text-primary-foreground" aria-hidden />
               </div>
               <p className="mt-1.5 text-sm font-extrabold text-primary-foreground">Compra verificada</p>
-              <span className="text-[10px] text-primary-foreground/80">Evidencia guardada ({photos.length || 1} {photos.length === 1 ? "foto" : "fotos"})</span>
+              <span className="text-[10px] text-primary-foreground/80">
+                Evidencia guardada ({photos.length || 1} {photos.length === 1 ? "foto" : "fotos"})
+              </span>
             </div>
           )}
 
@@ -257,17 +261,6 @@ export function VerifyScreen({
               </div>
               <p className="mt-1 text-xs font-bold text-secondary">
                 1 producto no visible en fotos
-              </p>
-            </div>
-          )}
-
-          {phase === "discrepancy_extra_item" && (
-            <div className="animate-pop-in flex flex-col items-center px-4 text-center">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sirena-yellow text-sirena-navy-deep">
-                <Plus className="h-6 w-6" aria-hidden />
-              </div>
-              <p className="mt-1 text-xs font-bold text-secondary">
-                Producto adicional detectado
               </p>
             </div>
           )}
@@ -286,7 +279,7 @@ export function VerifyScreen({
         </div>
       </div>
 
-      {/* Multi-Photo Thumbnails Strip (Point 14) */}
+      {/* Multi-Photo Thumbnails Strip */}
       {photos.length > 0 && (
         <div className="px-5 pt-2.5">
           <div className="flex items-center justify-between mb-1.5">
@@ -296,9 +289,7 @@ export function VerifyScreen({
             {photos.length < 4 && phase !== "scanning" && (
               <button
                 type="button"
-                onClick={() => {
-                  addSnapshot()
-                }}
+                onClick={addSnapshot}
                 className="flex items-center gap-1 text-[11px] font-bold text-secondary hover:underline"
               >
                 <Plus className="h-3 w-3" />
@@ -351,7 +342,7 @@ export function VerifyScreen({
       )}
 
       {/* Discrepancy Alerts & Item Checklist */}
-      <div className="no-scrollbar mt-2 flex-1 overflow-y-auto px-5">
+      <div className="no-scrollbar mt-2 flex-1 overflow-y-auto px-5 space-y-2">
         {phase === "idle" && (
           <div className="flex items-start gap-2 rounded-2xl bg-primary-foreground/5 p-3 text-xs text-primary-foreground/75">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-secondary" aria-hidden />
@@ -377,32 +368,37 @@ export function VerifyScreen({
           </div>
         )}
 
-        {phase === "discrepancy_extra_item" && (
+        {/* Auto-added Item Notification Banner (Point 1 update) */}
+        {extraAdded && (
           <div className="rounded-2xl bg-secondary/20 p-3 ring-1 ring-secondary/50 animate-slide-up">
             <div className="flex items-start gap-2 text-secondary">
-              <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
-              <div>
+              <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-secondary" />
+              <div className="flex-1">
                 <p className="text-xs font-extrabold text-primary-foreground">
-                  Producto no registrado detectado en fotos
+                  Agregamos {EXTRA_PRODUCT.name} a tu compra
                 </p>
-                <p className="mt-1 text-[11px] text-primary-foreground/90 font-medium">
-                  Detectamos <span className="font-bold text-secondary">{EXTRA_PRODUCT.name} ({formatDOP(EXTRA_PRODUCT.price)})</span>. ¿Deseas sumarlo a tu compra?
+                <p className="mt-0.5 text-[11px] text-primary-foreground/90 font-medium">
+                  La detectamos en la foto y la sumamos automáticamente (+{formatDOP(EXTRA_PRODUCT.price)}).
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {(phase === "scanning" || phase === "done" || phase === "discrepancy_not_visible" || phase === "discrepancy_extra_item") && (
-          <ul className="space-y-1.5 mt-2">
+        {(phase === "scanning" || phase === "done" || phase === "discrepancy_not_visible") && (
+          <ul className="space-y-1.5">
             {items.map((item, i) => {
-              const ok = recognized.includes(i)
+              const ok = recognized.includes(i) || item.id === EXTRA_PRODUCT.id
               const missing = phase === "discrepancy_not_visible" && !ok
+              const isAutoAdded = item.id === EXTRA_PRODUCT.id && extraAdded
+
               return (
                 <li
                   key={item.id}
-                  className={`flex items-center gap-2.5 rounded-xl p-2 ring-1 transition text-xs ${
-                    ok
+                  className={`flex items-center gap-2.5 rounded-xl p-2.5 ring-1 transition text-xs ${
+                    isAutoAdded
+                      ? "bg-sirena-yellow/15 ring-sirena-yellow/50"
+                      : ok
                       ? "bg-sirena-green/15 ring-sirena-green/40"
                       : missing
                       ? "bg-destructive/20 ring-destructive/40"
@@ -410,7 +406,7 @@ export function VerifyScreen({
                   }`}
                 >
                   <span
-                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
                       ok
                         ? "bg-sirena-green text-primary-foreground"
                         : missing
@@ -420,28 +416,34 @@ export function VerifyScreen({
                   >
                     {ok ? <Check className="h-3 w-3" /> : missing ? "!" : ""}
                   </span>
-                  <span className="font-semibold truncate">
-                    {item.name} {item.qty > 1 ? `(x${item.qty})` : ""}
-                  </span>
-                  <span className="ml-auto text-[10px] font-medium text-primary-foreground/60">
-                    {ok ? "Reconocido" : missing ? "No visible" : "Analizando…"}
-                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold truncate">
+                      {item.name} {item.qty > 1 ? `(x${item.qty})` : ""}
+                    </p>
+                    {isAutoAdded && (
+                      <p className="text-[10px] font-bold text-secondary">
+                        Detectado por IA en foto (+{formatDOP(item.price)})
+                      </p>
+                    )}
+                  </div>
+
+                  {isAutoAdded ? (
+                    <button
+                      type="button"
+                      onClick={handleRemoveExtra}
+                      className="rounded-lg bg-destructive/30 px-2 py-1 text-[10px] font-bold text-primary-foreground transition hover:bg-destructive/60 active:scale-95"
+                    >
+                      Quitar
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-medium text-primary-foreground/60 shrink-0">
+                      {ok ? "Reconocido" : missing ? "No visible" : "Analizando…"}
+                    </span>
+                  )}
                 </li>
               )
             })}
-            {extraAdded && (
-              <li className="flex items-center gap-2.5 rounded-xl p-2 bg-sirena-green/20 ring-1 ring-sirena-green text-xs animate-pop-in">
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sirena-green text-primary-foreground">
-                  <Check className="h-3 w-3" />
-                </span>
-                <span className="font-semibold truncate text-secondary">
-                  {EXTRA_PRODUCT.name} (Agregado)
-                </span>
-                <span className="ml-auto text-[10px] font-bold text-sirena-green">
-                  +{formatDOP(EXTRA_PRODUCT.price)}
-                </span>
-              </li>
-            )}
           </ul>
         )}
       </div>
@@ -485,26 +487,6 @@ export function VerifyScreen({
               className="w-full rounded-2xl py-2 text-xs font-semibold text-primary-foreground/75 hover:text-primary-foreground"
             >
               Continuar aceptando discrepancia
-            </button>
-          </div>
-        )}
-
-        {phase === "discrepancy_extra_item" && (
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={handleAddExtra}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sirena-green py-3 text-sm font-extrabold text-primary-foreground active:scale-[0.99]"
-            >
-              <Plus className="h-4 w-4" />
-              Agregar al carrito (+{formatDOP(EXTRA_PRODUCT.price)})
-            </button>
-            <button
-              type="button"
-              onClick={handleIgnoreExtra}
-              className="w-full rounded-2xl py-2 text-xs font-semibold text-primary-foreground/75 hover:text-primary-foreground"
-            >
-              Retirar producto / No agregar
             </button>
           </div>
         )}
