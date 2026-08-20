@@ -44,6 +44,7 @@ export type Order = {
   savingsEnRebaja: number
   total: number
   paymentDetails: PaymentDetails
+  verificationPhotos?: string[]
   timeSavedMin: number
   userName: string
 }

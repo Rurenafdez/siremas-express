@@ -90,6 +90,7 @@ export function HistoryScreen({
           cart={selectedOrder.items}
           orderId={selectedOrder.id}
           paymentDetails={selectedOrder.paymentDetails}
+          verificationPhotos={selectedOrder.verificationPhotos}
           userName={selectedOrder.userName}
           onClose={() => setSelectedOrder(null)}
         />

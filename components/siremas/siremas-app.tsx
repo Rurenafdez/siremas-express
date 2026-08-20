@@ -62,6 +62,7 @@ export function SiremasApp() {
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [orderId, setOrderId] = useState("LS-482103")
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | undefined>(undefined)
+  const [verificationPhotos, setVerificationPhotos] = useState<string[]>([])
 
   useEffect(() => {
     // Load persisted user & orders on mount
@@ -160,7 +161,7 @@ export function SiremasApp() {
     setPaymentDetails(details)
     const { subtotal, discounts, savingsEnRebaja, total } = cartTotals(cart)
 
-    // Save order to persistent repository
+    // Save order to persistent repository with verification photos for full traceability
     const newOrder = createOrder({
       orderId,
       items: cart,
@@ -169,6 +170,7 @@ export function SiremasApp() {
       savingsEnRebaja,
       total,
       paymentDetails: details,
+      verificationPhotos: verificationPhotos.length > 0 ? verificationPhotos : ["/products/jugo-wala.png"],
       timeSavedMin: 12,
       userName: user?.name || "Camila Ramírez",
     })
@@ -193,6 +195,7 @@ export function SiremasApp() {
     setPromoOpen(false)
     setReceiptOpen(false)
     setPaymentDetails(undefined)
+    setVerificationPhotos([])
     setScreen("home")
   }
 
@@ -284,8 +287,11 @@ export function SiremasApp() {
         <VerifyScreen
           cart={cart}
           onAddToCart={addToCart}
-          onVerified={() => setScreen("payment")}
-          onBack={() => setScreen("qr")}
+          onVerified={(capturedPhotos) => {
+            setVerificationPhotos(capturedPhotos)
+            setScreen("payment")
+          }}
+          onBack={() => setScreen("cart")}
         />
       )}
 
@@ -331,6 +337,7 @@ export function SiremasApp() {
           cart={cart}
           orderId={orderId}
           paymentDetails={paymentDetails}
+          verificationPhotos={verificationPhotos}
           userName={user?.name || "Camila Ramírez"}
           onClose={() => setReceiptOpen(false)}
         />

@@ -58,6 +58,7 @@ export function createOrder({
   savingsEnRebaja,
   total,
   paymentDetails,
+  verificationPhotos = [],
   timeSavedMin = 12,
   userName = "Camila Ramírez",
 }: {
@@ -68,6 +69,7 @@ export function createOrder({
   savingsEnRebaja: number
   total: number
   paymentDetails: PaymentDetails
+  verificationPhotos?: string[]
   timeSavedMin?: number
   userName?: string
 }): Order {
@@ -88,6 +90,7 @@ export function createOrder({
     savingsEnRebaja,
     total,
     paymentDetails,
+    verificationPhotos,
     timeSavedMin,
     userName,
   }

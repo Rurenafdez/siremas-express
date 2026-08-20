@@ -76,6 +76,10 @@ export const SEED_ORDERS: Order[] = [
       },
       total: 200,
     },
+    verificationPhotos: [
+      "/products/jugo-wala.png",
+      "/products/galletas.png",
+    ],
     timeSavedMin: 14,
     userName: "Camila Ramírez",
   },
@@ -116,6 +120,10 @@ export const SEED_ORDERS: Order[] = [
       pointsAmount: 185,
       total: 185,
     },
+    verificationPhotos: [
+      "/products/jamon.png",
+      "/products/chocolate.png",
+    ],
     timeSavedMin: 11,
     userName: "Camila Ramírez",
   },

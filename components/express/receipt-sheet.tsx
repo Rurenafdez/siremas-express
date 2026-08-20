@@ -1,6 +1,7 @@
 "use client"
 
-import { Receipt, Check, Tag, ShieldCheck, Clock, Sparkles } from "lucide-react"
+import Image from "next/image"
+import { Receipt, Check, Tag, ShieldCheck, Camera, Sparkles } from "lucide-react"
 import {
   type CartLine,
   cartTotals,
@@ -16,12 +17,14 @@ export function ReceiptSheet({
   cart,
   orderId,
   paymentDetails,
+  verificationPhotos = [],
   userName = "Camila Ramírez",
   onClose,
 }: {
   cart: CartLine[]
   orderId: string
   paymentDetails?: PaymentDetails
+  verificationPhotos?: string[]
   userName?: string
   onClose: () => void
 }) {
@@ -69,7 +72,7 @@ export function ReceiptSheet({
       </div>
 
       {/* Cart Items Breakdown */}
-      <div className="no-scrollbar my-3 max-h-48 space-y-2 overflow-y-auto border-y border-dashed border-border py-3">
+      <div className="no-scrollbar my-3 max-h-40 space-y-2 overflow-y-auto border-y border-dashed border-border py-3">
         {cart.map((l) => {
           const saving = lineSaving(l)
           const isEnRebaja = l.promoType === "rebaja" || l.savingReason?.toLowerCase().includes("rebaja")
@@ -86,7 +89,6 @@ export function ReceiptSheet({
                   <p className={`text-[10px] font-medium flex items-center gap-1 ${
                     isEnRebaja ? "text-amber-600 font-bold" : "text-sirena-green"
                   }`}>
-                    {isEnRebaja && <Clock className="h-2.5 w-2.5" />}
                     {l.savingReason ?? "Ahorro"} -{formatDOP(saving)}
                   </p>
                 )}
@@ -143,6 +145,26 @@ export function ReceiptSheet({
           </div>
         )}
       </div>
+
+      {/* AI Verification Audit Evidence Photos (Point 14) */}
+      {verificationPhotos && verificationPhotos.length > 0 && (
+        <div className="mt-3 rounded-2xl bg-muted/60 p-2.5 ring-1 ring-border/50">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
+              <Camera className="h-3.5 w-3.5 text-primary" />
+              Evidencia de Verificación IA ({verificationPhotos.length})
+            </span>
+            <span className="text-[10px] font-bold text-sirena-green">Auditado</span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            {verificationPhotos.map((src, i) => (
+              <div key={i} className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-card ring-1 ring-border">
+                <Image src={src || "/placeholder.svg"} alt={`Evidencia ${i + 1}`} fill className="object-contain p-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-muted py-2 text-[11px] font-semibold text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 text-sirena-green" />

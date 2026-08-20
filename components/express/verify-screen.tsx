@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import {
   ArrowLeft,
   Camera,
@@ -12,6 +13,8 @@ import {
   RefreshCw,
   Plus,
   SlidersHorizontal,
+  X,
+  ShieldCheck,
 } from "lucide-react"
 import {
   type CartLine,
@@ -43,7 +46,7 @@ export function VerifyScreen({
 }: {
   cart: CartLine[]
   onAddToCart?: (product: Product) => void
-  onVerified: () => void
+  onVerified: (photos: string[]) => void
   onBack: () => void
 }) {
   const [phase, setPhase] = useState<Phase>("idle")
@@ -51,7 +54,9 @@ export function VerifyScreen({
   const [showScenarioMenu, setShowScenarioMenu] = useState(false)
   const [recognized, setRecognized] = useState<number[]>([])
   const [extraAdded, setExtraAdded] = useState(false)
+  const [photos, setPhotos] = useState<string[]>([])
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const items = cart
 
@@ -59,7 +64,38 @@ export function VerifyScreen({
     return () => timers.current.forEach(clearTimeout)
   }, [])
 
+  function addSnapshot() {
+    // Generate snapshot representation from available products
+    const samplePhotos = [
+      "/products/jugo-wala.png",
+      "/products/galletas.png",
+      "/products/papitas-wala.png",
+      "/products/jamon.png",
+    ]
+    const nextPhoto = samplePhotos[photos.length % samplePhotos.length]
+    setPhotos((prev) => [...prev, nextPhoto])
+  }
+
+  function handleNativeCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setPhotos((prev) => [...prev, url])
+      // Trigger AI scan after photo taken
+      if (phase === "idle") {
+        startScan()
+      }
+    }
+  }
+
+  function handleRemovePhoto(index: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== index))
+  }
+
   function startScan() {
+    if (photos.length === 0) {
+      addSnapshot()
+    }
     setPhase("scanning")
     setRecognized([])
     timers.current.forEach(clearTimeout)
@@ -118,10 +154,26 @@ export function VerifyScreen({
   function handleRetry() {
     setPhase("idle")
     setRecognized([])
+    setPhotos([])
+  }
+
+  function handleProceedToPayment() {
+    const finalPhotos = photos.length > 0 ? photos : ["/products/jugo-wala.png"]
+    onVerified(finalPhotos)
   }
 
   return (
     <div className="flex h-full flex-col bg-sirena-navy-deep text-primary-foreground">
+      {/* Hidden native live camera input (capture="environment" restricts to live camera, no gallery) */}
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        ref={fileInputRef}
+        onChange={handleNativeCapture}
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-primary-foreground/10">
         <div className="flex items-center gap-3">
@@ -178,11 +230,11 @@ export function VerifyScreen({
 
       {/* Camera Viewfinder */}
       <div className="px-5 pt-3">
-        <div className="relative flex aspect-square w-full max-h-[220px] items-center justify-center overflow-hidden rounded-3xl bg-primary/40 ring-1 ring-primary-foreground/10">
-          <span className="absolute left-4 top-4 h-8 w-8 rounded-tl-xl border-l-4 border-t-4 border-secondary" />
-          <span className="absolute right-4 top-4 h-8 w-8 rounded-tr-xl border-r-4 border-t-4 border-secondary" />
-          <span className="absolute bottom-4 left-4 h-8 w-8 rounded-bl-xl border-b-4 border-l-4 border-secondary" />
-          <span className="absolute bottom-4 right-4 h-8 w-8 rounded-br-xl border-b-4 border-r-4 border-secondary" />
+        <div className="relative flex aspect-square w-full max-h-[190px] items-center justify-center overflow-hidden rounded-3xl bg-primary/40 ring-1 ring-primary-foreground/10 shadow-inner">
+          <span className="absolute left-4 top-4 h-7 w-7 rounded-tl-xl border-l-4 border-t-4 border-secondary" />
+          <span className="absolute right-4 top-4 h-7 w-7 rounded-tr-xl border-r-4 border-t-4 border-secondary" />
+          <span className="absolute bottom-4 left-4 h-7 w-7 rounded-bl-xl border-b-4 border-l-4 border-secondary" />
+          <span className="absolute bottom-4 right-4 h-7 w-7 rounded-br-xl border-b-4 border-r-4 border-secondary" />
 
           {phase === "scanning" && (
             <span className="animate-scanline absolute inset-x-8 h-0.5 rounded-full bg-secondary shadow-[0_0_12px_2px_var(--sirena-yellow)]" />
@@ -190,67 +242,135 @@ export function VerifyScreen({
 
           {phase === "done" && (
             <div className="animate-pop-in flex flex-col items-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-sirena-green">
-                <Check className="h-8 w-8 text-primary-foreground" aria-hidden />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sirena-green shadow-md">
+                <Check className="h-7 w-7 text-primary-foreground" aria-hidden />
               </div>
-              <p className="mt-2 text-sm font-extrabold">Compra verificada</p>
+              <p className="mt-1.5 text-sm font-extrabold text-primary-foreground">Compra verificada</p>
+              <span className="text-[10px] text-primary-foreground/80">Evidencia guardada ({photos.length || 1} {photos.length === 1 ? "foto" : "fotos"})</span>
             </div>
           )}
 
           {phase === "discrepancy_not_visible" && (
             <div className="animate-pop-in flex flex-col items-center px-4 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sirena-yellow text-sirena-navy-deep">
-                <AlertTriangle className="h-7 w-7" aria-hidden />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sirena-yellow text-sirena-navy-deep">
+                <AlertTriangle className="h-6 w-6" aria-hidden />
               </div>
               <p className="mt-1 text-xs font-bold text-secondary">
-                Atención: 1 producto no visible
+                1 producto no visible en fotos
               </p>
             </div>
           )}
 
           {phase === "discrepancy_extra_item" && (
             <div className="animate-pop-in flex flex-col items-center px-4 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sirena-yellow text-sirena-navy-deep">
-                <Plus className="h-7 w-7" aria-hidden />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sirena-yellow text-sirena-navy-deep">
+                <Plus className="h-6 w-6" aria-hidden />
               </div>
               <p className="mt-1 text-xs font-bold text-secondary">
-                Detectamos un producto adicional
+                Producto adicional detectado
               </p>
             </div>
           )}
 
           {phase === "idle" && (
             <div className="flex flex-col items-center px-8 text-center">
-              <Camera className="h-10 w-10 text-primary-foreground/40" aria-hidden />
-              <p className="mt-2 text-xs font-semibold text-pretty">
+              <Camera className="h-9 w-9 text-primary-foreground/40" aria-hidden />
+              <p className="mt-1.5 text-xs font-semibold text-pretty">
                 Coloca todos tus productos frente a la cámara
               </p>
+              <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-secondary font-medium">
+                <ShieldCheck className="h-3 w-3" /> Solo cámara en vivo · Sin galería
+              </span>
             </div>
           )}
         </div>
       </div>
 
+      {/* Multi-Photo Thumbnails Strip (Point 14) */}
+      {photos.length > 0 && (
+        <div className="px-5 pt-2.5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-bold text-primary-foreground/80">
+              Fotos de auditoría ({photos.length}):
+            </span>
+            {photos.length < 4 && phase !== "scanning" && (
+              <button
+                type="button"
+                onClick={() => {
+                  addSnapshot()
+                }}
+                className="flex items-center gap-1 text-[11px] font-bold text-secondary hover:underline"
+              >
+                <Plus className="h-3 w-3" />
+                Agregar otra foto
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            {photos.map((src, idx) => (
+              <div
+                key={idx}
+                className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-card ring-1 ring-primary-foreground/20"
+              >
+                <Image
+                  src={src || "/placeholder.svg"}
+                  alt={`Foto ${idx + 1}`}
+                  fill
+                  className="object-contain p-1"
+                />
+                {phase !== "scanning" && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePhoto(idx)}
+                    aria-label={`Eliminar foto ${idx + 1}`}
+                    className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-primary-foreground shadow"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                )}
+                <span className="absolute bottom-0.5 left-0.5 rounded bg-black/60 px-1 text-[8px] font-bold text-white">
+                  #{idx + 1}
+                </span>
+              </div>
+            ))}
+
+            {photos.length < 4 && phase !== "scanning" && (
+              <button
+                type="button"
+                onClick={addSnapshot}
+                aria-label="Tomar otra foto"
+                className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-primary-foreground/30 bg-primary-foreground/5 text-primary-foreground/60 transition hover:bg-primary-foreground/10"
+              >
+                <Plus className="h-4 w-4 text-secondary" />
+                <span className="text-[9px] font-semibold mt-0.5">Otra foto</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Discrepancy Alerts & Item Checklist */}
-      <div className="no-scrollbar mt-2.5 flex-1 overflow-y-auto px-5">
+      <div className="no-scrollbar mt-2 flex-1 overflow-y-auto px-5">
         {phase === "idle" && (
           <div className="flex items-start gap-2 rounded-2xl bg-primary-foreground/5 p-3 text-xs text-primary-foreground/75">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-secondary" aria-hidden />
             <p className="text-pretty">
-              Nuestra IA confirmará que los productos físicos en tu bolsa coincidan exactamente con tu compra.
+              Puedes tomar varias fotos si llevas muchos artículos. La IA analizará todas las tomas tomadas en vivo.
             </p>
           </div>
         )}
 
         {phase === "discrepancy_not_visible" && (
-          <div className="rounded-2xl bg-sirena-yellow/15 p-3.5 ring-1 ring-sirena-yellow/40 animate-slide-up">
+          <div className="rounded-2xl bg-sirena-yellow/15 p-3 ring-1 ring-sirena-yellow/40 animate-slide-up">
             <div className="flex items-start gap-2 text-secondary">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-extrabold text-foreground text-primary-foreground">
+                <p className="text-xs font-extrabold text-primary-foreground">
                   Algunos productos no pueden identificarse
                 </p>
                 <p className="mt-1 text-[11px] text-primary-foreground/80">
-                  Por favor organiza tus productos o retira cualquier objeto que los tape para completar la verificación.
+                  Organiza tus productos o toma una foto adicional para que podamos verificarlos.
                 </p>
               </div>
             </div>
@@ -258,15 +378,15 @@ export function VerifyScreen({
         )}
 
         {phase === "discrepancy_extra_item" && (
-          <div className="rounded-2xl bg-secondary/20 p-3.5 ring-1 ring-secondary/50 animate-slide-up">
+          <div className="rounded-2xl bg-secondary/20 p-3 ring-1 ring-secondary/50 animate-slide-up">
             <div className="flex items-start gap-2 text-secondary">
               <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-extrabold text-primary-foreground">
-                  Producto no registrado detectado en cámara
+                  Producto no registrado detectado en fotos
                 </p>
                 <p className="mt-1 text-[11px] text-primary-foreground/90 font-medium">
-                  Detectamos <span className="font-bold text-secondary">{EXTRA_PRODUCT.name} ({formatDOP(EXTRA_PRODUCT.price)})</span> en tus manos. ¿Deseas sumarlo a tu compra?
+                  Detectamos <span className="font-bold text-secondary">{EXTRA_PRODUCT.name} ({formatDOP(EXTRA_PRODUCT.price)})</span>. ¿Deseas sumarlo a tu compra?
                 </p>
               </div>
             </div>
@@ -332,10 +452,10 @@ export function VerifyScreen({
           <button
             type="button"
             onClick={startScan}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-base font-extrabold text-secondary-foreground active:scale-[0.99]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-base font-extrabold text-secondary-foreground active:scale-[0.99] shadow-md transition"
           >
             <Camera className="h-5 w-5" aria-hidden />
-            Tomar foto
+            Tomar foto y verificar
           </button>
         )}
 
@@ -345,7 +465,7 @@ export function VerifyScreen({
             disabled
             className="w-full rounded-2xl bg-primary-foreground/10 py-3.5 text-base font-bold text-primary-foreground/60"
           >
-            Verificando… {recognized.length}/{items.length}
+            Analizando evidencias… {recognized.length}/{items.length}
           </button>
         )}
 
@@ -357,11 +477,11 @@ export function VerifyScreen({
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-extrabold text-secondary-foreground active:scale-[0.99]"
             >
               <RefreshCw className="h-4 w-4" />
-              Volver a tomar foto
+              Tomar fotos de nuevo
             </button>
             <button
               type="button"
-              onClick={onVerified}
+              onClick={handleProceedToPayment}
               className="w-full rounded-2xl py-2 text-xs font-semibold text-primary-foreground/75 hover:text-primary-foreground"
             >
               Continuar aceptando discrepancia
@@ -392,8 +512,8 @@ export function VerifyScreen({
         {phase === "done" && (
           <button
             type="button"
-            onClick={onVerified}
-            className="animate-slide-up flex w-full items-center justify-center gap-2 rounded-2xl bg-sirena-green py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99]"
+            onClick={handleProceedToPayment}
+            className="animate-slide-up flex w-full items-center justify-center gap-2 rounded-2xl bg-sirena-green py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99] shadow-md"
           >
             <CreditCard className="h-5 w-5" aria-hidden />
             Continuar al pago
