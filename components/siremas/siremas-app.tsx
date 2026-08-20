@@ -348,7 +348,6 @@ export function SiremasApp() {
         <VerifyScreen
           cart={cart}
           onAddToCart={addToCart}
-          onRemoveFromCart={handleRemove}
           onVerified={(capturedPhotos) => {
             setVerificationPhotos(capturedPhotos)
             goTo("payment")

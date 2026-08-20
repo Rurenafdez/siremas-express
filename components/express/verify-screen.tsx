@@ -15,7 +15,6 @@ import {
   SlidersHorizontal,
   X,
   ShieldCheck,
-  Trash2,
 } from "lucide-react"
 import {
   type CartLine,
@@ -42,13 +41,11 @@ const EXTRA_PRODUCT: Product = CATALOG[1] || {
 export function VerifyScreen({
   cart,
   onAddToCart,
-  onRemoveFromCart,
   onVerified,
   onBack,
 }: {
   cart: CartLine[]
   onAddToCart?: (product: Product) => void
-  onRemoveFromCart?: (productId: string) => void
   onVerified: (photos: string[]) => void
   onBack: () => void
 }) {
@@ -128,13 +125,13 @@ export function VerifyScreen({
         timers.current.push(t)
       })
     } else if (scenario === "extra_item") {
-      // All cart items recognized + automatically add extra item to cart immediately
+      // All cart items recognized + automatically add extra item to cart immediately (locked in cart)
       items.forEach((_, i) => {
         const t = setTimeout(() => {
           setRecognized((prev) => [...prev, i])
           if (i === items.length - 1) {
             const done = setTimeout(() => {
-              // Automatically add to cart without blocking decision modal (Point 1 update)
+              // Automatically add to cart without decision modal and without remove option (Point 1)
               onAddToCart?.(EXTRA_PRODUCT)
               setExtraAdded(true)
               setPhase("done")
@@ -145,11 +142,6 @@ export function VerifyScreen({
         timers.current.push(t)
       })
     }
-  }
-
-  function handleRemoveExtra() {
-    onRemoveFromCart?.(EXTRA_PRODUCT.id)
-    setExtraAdded(false)
   }
 
   function handleRetry() {
@@ -368,7 +360,7 @@ export function VerifyScreen({
           </div>
         )}
 
-        {/* Auto-added Item Notification Banner (Point 1 update) */}
+        {/* Auto-added Item Notification Banner (Point 1: locked in cart) */}
         {extraAdded && (
           <div className="rounded-2xl bg-secondary/20 p-3 ring-1 ring-secondary/50 animate-slide-up">
             <div className="flex items-start gap-2 text-secondary">
@@ -378,7 +370,7 @@ export function VerifyScreen({
                   Agregamos {EXTRA_PRODUCT.name} a tu compra
                 </p>
                 <p className="mt-0.5 text-[11px] text-primary-foreground/90 font-medium">
-                  La detectamos en la foto y la sumamos automáticamente (+{formatDOP(EXTRA_PRODUCT.price)}).
+                  La IA la detectó en la foto y se incluyó automáticamente en tu compra (+{formatDOP(EXTRA_PRODUCT.price)}).
                 </p>
               </div>
             </div>
@@ -395,7 +387,7 @@ export function VerifyScreen({
               return (
                 <li
                   key={item.id}
-                  className={`flex items-center gap-2.5 rounded-xl p-2.5 ring-1 transition text-xs ${
+                  className={`flex items-center justify-between gap-2.5 rounded-xl p-2.5 ring-1 transition text-xs ${
                     isAutoAdded
                       ? "bg-sirena-yellow/15 ring-sirena-yellow/50"
                       : ok
@@ -405,42 +397,36 @@ export function VerifyScreen({
                       : "bg-primary-foreground/5 ring-primary-foreground/10"
                   }`}
                 >
-                  <span
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
-                      ok
-                        ? "bg-sirena-green text-primary-foreground"
-                        : missing
-                        ? "bg-destructive text-primary-foreground font-bold"
-                        : "bg-primary-foreground/10 text-transparent"
-                    }`}
-                  >
-                    {ok ? <Check className="h-3 w-3" /> : missing ? "!" : ""}
-                  </span>
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
+                        ok
+                          ? "bg-sirena-green text-primary-foreground"
+                          : missing
+                          ? "bg-destructive text-primary-foreground font-bold"
+                          : "bg-primary-foreground/10 text-transparent"
+                      }`}
+                    >
+                      {ok ? <Check className="h-3 w-3" /> : missing ? "!" : ""}
+                    </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold truncate">
-                      {item.name} {item.qty > 1 ? `(x${item.qty})` : ""}
-                    </p>
-                    {isAutoAdded && (
-                      <p className="text-[10px] font-bold text-secondary">
-                        Detectado por IA en foto (+{formatDOP(item.price)})
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold truncate">
+                        {item.name} {item.qty > 1 ? `(x${item.qty})` : ""}
                       </p>
-                    )}
+                      {isAutoAdded && (
+                        <p className="text-[10px] font-bold text-secondary">
+                          Detectado por IA en foto · Incluido en compra (+{formatDOP(item.price)})
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  {isAutoAdded ? (
-                    <button
-                      type="button"
-                      onClick={handleRemoveExtra}
-                      className="rounded-lg bg-destructive/30 px-2 py-1 text-[10px] font-bold text-primary-foreground transition hover:bg-destructive/60 active:scale-95"
-                    >
-                      Quitar
-                    </button>
-                  ) : (
-                    <span className="text-[10px] font-medium text-primary-foreground/60 shrink-0">
-                      {ok ? "Reconocido" : missing ? "No visible" : "Analizando…"}
-                    </span>
-                  )}
+                  <span className={`text-[10px] font-bold shrink-0 ${
+                    isAutoAdded ? "text-secondary font-extrabold" : "text-primary-foreground/60"
+                  }`}>
+                    {isAutoAdded ? "Agregado por IA" : ok ? "Reconocido" : missing ? "No visible" : "Analizando…"}
+                  </span>
                 </li>
               )
             })}
