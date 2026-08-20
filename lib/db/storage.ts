@@ -82,6 +82,7 @@ export const SEED_ORDERS: Order[] = [
     ],
     timeSavedMin: 14,
     userName: "Camila Ramírez",
+    pointsEarned: 2,
   },
   {
     id: "LS-730192",
@@ -126,6 +127,7 @@ export const SEED_ORDERS: Order[] = [
     ],
     timeSavedMin: 11,
     userName: "Camila Ramírez",
+    pointsEarned: 1,
   },
 ]
 

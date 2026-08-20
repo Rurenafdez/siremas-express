@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Receipt, Check, Tag, ShieldCheck, Camera, RotateCcw, Store, Home } from "lucide-react"
+import { Receipt, Check, Tag, ShieldCheck, Camera, RotateCcw, Store, Home, Sparkles } from "lucide-react"
 import {
   type CartLine,
   cartTotals,
@@ -21,6 +21,7 @@ export function ReceiptSheet({
   userName = "Camila Ramírez",
   fulfillment,
   deliveryAddress,
+  pointsEarned = 0,
   onRepeatOrder,
   onClose,
 }: {
@@ -31,6 +32,7 @@ export function ReceiptSheet({
   userName?: string
   fulfillment?: "pickup" | "delivery"
   deliveryAddress?: string
+  pointsEarned?: number
   onRepeatOrder?: () => void
   onClose: () => void
 }) {
@@ -89,9 +91,8 @@ export function ReceiptSheet({
         )}
       </div>
 
-
       {/* Cart Items Breakdown */}
-      <div className="no-scrollbar my-3 max-h-40 space-y-2 overflow-y-auto border-y border-dashed border-border py-3">
+      <div className="no-scrollbar my-3 max-h-36 space-y-2 overflow-y-auto border-y border-dashed border-border py-3">
         {cart.map((l) => {
           const saving = lineSaving(l)
           const isEnRebaja = l.promoType === "rebaja" || l.savingReason?.toLowerCase().includes("rebaja")
@@ -104,13 +105,20 @@ export function ReceiptSheet({
                     x{l.qty}
                   </span>
                 </p>
-                {saving > 0 && (
-                  <p className={`text-[10px] font-medium flex items-center gap-1 ${
-                    isEnRebaja ? "text-amber-600 font-bold" : "text-sirena-green"
-                  }`}>
-                    {l.savingReason ?? "Ahorro"} -{formatDOP(saving)}
-                  </p>
-                )}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {saving > 0 && (
+                    <p className={`text-[10px] font-medium flex items-center gap-0.5 ${
+                      isEnRebaja ? "text-amber-600 font-bold" : "text-sirena-green"
+                    }`}>
+                      {l.savingReason ?? "Ahorro"} -{formatDOP(saving)}
+                    </p>
+                  )}
+                  {l.isStoreBrand && (
+                    <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1 rounded">
+                      2x Puntos Wala
+                    </span>
+                  )}
+                </div>
               </div>
               <span className="font-bold tabular-nums text-foreground">
                 {formatDOP(linePaid(l))}
@@ -145,16 +153,16 @@ export function ReceiptSheet({
           </div>
         )}
 
-        <div className="flex items-baseline justify-between border-t border-border pt-2 text-sm">
+        <div className="flex items-baseline justify-between border-t border-border pt-1.5 text-sm">
           <span className="font-bold text-foreground">Total pagado</span>
-          <span className="text-xl font-extrabold text-foreground">{formatDOP(total)}</span>
+          <span className="text-lg font-extrabold text-foreground">{formatDOP(total)}</span>
         </div>
 
-        {/* Dynamic Payment Method Explanations */}
+        {/* Dynamic Payment Method Explanations (Redeemed Points) */}
         {paymentDetails?.type === "split" && (
-          <div className="mt-1 rounded-xl bg-muted p-2 text-[11px] text-muted-foreground space-y-0.5">
+          <div className="rounded-xl bg-muted p-2 text-[11px] text-muted-foreground space-y-0.5">
             <div className="flex justify-between">
-              <span>• Puntos Siremás:</span>
+              <span>• Puntos canjeados:</span>
               <span className="font-bold text-sirena-green">-{paymentDetails.pointsUsed} pts ({formatDOP(paymentDetails.pointsAmount || 0)})</span>
             </div>
             <div className="flex justify-between">
@@ -163,11 +171,24 @@ export function ReceiptSheet({
             </div>
           </div>
         )}
+
+        {/* Points Earned line (Point 24) — distinctly separated from points redeemed */}
+        {pointsEarned > 0 && (
+          <div className="flex items-center justify-between rounded-xl bg-secondary px-3 py-1.5 text-xs font-bold text-secondary-foreground shadow-sm">
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              Puntos Siremás ganados:
+            </span>
+            <span className="text-xs font-extrabold bg-primary text-secondary px-2 py-0.5 rounded-full">
+              +{pointsEarned} pts
+            </span>
+          </div>
+        )}
       </div>
 
       {/* AI Verification Audit Evidence Photos (Point 14) */}
       {verificationPhotos && verificationPhotos.length > 0 && (
-        <div className="mt-3 rounded-2xl bg-muted/60 p-2.5 ring-1 ring-border/50">
+        <div className="mt-2.5 rounded-2xl bg-muted/60 p-2.5 ring-1 ring-border/50">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
               <Camera className="h-3.5 w-3.5 text-primary" />
@@ -177,34 +198,30 @@ export function ReceiptSheet({
           </div>
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
             {verificationPhotos.map((src, i) => (
-              <div key={i} className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-card ring-1 ring-border">
-                <Image src={src || "/placeholder.svg"} alt={`Evidencia ${i + 1}`} fill className="object-contain p-1" />
+              <div key={i} className="relative h-11 w-11 shrink-0 rounded-lg overflow-hidden bg-card ring-1 ring-border">
+                <Image src={src || "/placeholder.svg"} alt="Evidencia" fill className="object-contain p-0.5" />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-muted py-2 text-[11px] font-semibold text-muted-foreground">
-        <ShieldCheck className="h-3.5 w-3.5 text-sirena-green" />
-        Transacción autorizada · Salida express verificada
-      </div>
-
-      <div className="mt-4 space-y-2">
+      {/* Repeat purchase and Close buttons */}
+      <div className="mt-3 space-y-2">
         {onRepeatOrder && (
           <button
             type="button"
             onClick={onRepeatOrder}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-extrabold text-secondary-foreground active:scale-[0.99] shadow-sm transition"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-extrabold text-primary-foreground transition active:scale-[0.99] shadow-sm"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-4 w-4 text-secondary" />
             Repetir esta compra
           </button>
         )}
         <button
           type="button"
           onClick={onClose}
-          className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.99]"
+          className="w-full rounded-2xl bg-muted py-2.5 text-xs font-bold text-foreground hover:bg-muted/80 transition active:scale-95"
         >
           Cerrar recibo
         </button>

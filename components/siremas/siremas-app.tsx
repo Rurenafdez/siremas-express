@@ -5,6 +5,7 @@ import {
   type CartLine,
   type Product,
   cartTotals,
+  calculateEarnedPoints,
   CATALOG,
   UNAVAILABLE,
   SUBSTITUTE,
@@ -74,6 +75,8 @@ export function SiremasApp() {
   // Point 18: SirenaGo fulfillment state
   const [fulfillment, setFulfillment] = useState<FulfillmentType | undefined>(undefined)
   const [deliveryAddress, setDeliveryAddress] = useState<string | undefined>(undefined)
+  // Point 24: Puntos Siremás earned
+  const [pointsEarned, setPointsEarned] = useState<number>(0)
 
   useEffect(() => {
     // Load persisted user & orders on mount
@@ -192,6 +195,9 @@ export function SiremasApp() {
   function handlePaid(details: PaymentDetails) {
     setPaymentDetails(details)
     const { subtotal, discounts, savingsEnRebaja, total } = cartTotals(cart)
+    // Point 24: Calculate earned Siremás points (1 pt/RD$100, 2x on Wala brand)
+    const earned = calculateEarnedPoints(cart)
+    setPointsEarned(earned)
 
     const newOrder = createOrder({
       orderId,
@@ -206,6 +212,7 @@ export function SiremasApp() {
       userName: user?.name || "Camila Ramírez",
       fulfillment,
       deliveryAddress,
+      pointsEarned: earned,
     })
 
     setOrders((prev) => [newOrder, ...prev])
@@ -242,6 +249,7 @@ export function SiremasApp() {
     setVerificationPhotos([])
     setFulfillment(undefined)
     setDeliveryAddress(undefined)
+    setPointsEarned(0)
     setScreenStack(["home"])
   }
 
@@ -374,6 +382,7 @@ export function SiremasApp() {
           paymentDetails={paymentDetails}
           fulfillment={fulfillment}
           deliveryAddress={deliveryAddress}
+          pointsEarned={pointsEarned}
           onReceipt={() => setReceiptOpen(true)}
           onFinish={handleReset}
         />
@@ -406,6 +415,7 @@ export function SiremasApp() {
           userName={user?.name || "Camila Ramírez"}
           fulfillment={fulfillment}
           deliveryAddress={deliveryAddress}
+          pointsEarned={pointsEarned}
           onClose={() => setReceiptOpen(false)}
         />
       )}

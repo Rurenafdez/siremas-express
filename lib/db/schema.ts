@@ -53,4 +53,6 @@ export type Order = {
   fulfillment?: FulfillmentType
   /** Delivery address when fulfillment === "delivery" */
   deliveryAddress?: string
+  /** Point 24: Puntos Siremás earned with this purchase */
+  pointsEarned?: number
 }

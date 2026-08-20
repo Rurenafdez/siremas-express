@@ -61,6 +61,12 @@ export function deductPoints(pointsToDeduct: number): User {
   return updateUser({ points: updatedPoints })
 }
 
+export function addPoints(pointsToAdd: number): User {
+  const user = loadUserFromStorage()
+  const updatedPoints = user.points + pointsToAdd
+  return updateUser({ points: updatedPoints })
+}
+
 export function getOrders(): Order[] {
   return loadOrdersFromStorage()
 }
@@ -78,6 +84,7 @@ export function createOrder({
   userName = "Camila Ramírez",
   fulfillment,
   deliveryAddress,
+  pointsEarned = 0,
 }: {
   orderId: string
   items: CartLine[]
@@ -91,6 +98,7 @@ export function createOrder({
   userName?: string
   fulfillment?: FulfillmentType
   deliveryAddress?: string
+  pointsEarned?: number
 }): Order {
   const orders = loadOrdersFromStorage()
   const now = new Date()
@@ -114,6 +122,7 @@ export function createOrder({
     userName,
     fulfillment,
     deliveryAddress,
+    pointsEarned,
   }
 
   // Prepend new order to list
@@ -123,6 +132,11 @@ export function createOrder({
   // If points were used, deduct from user
   if (paymentDetails.pointsUsed && paymentDetails.pointsUsed > 0) {
     deductPoints(paymentDetails.pointsUsed)
+  }
+
+  // Point 24: If points were earned with this purchase, add to user balance
+  if (pointsEarned && pointsEarned > 0) {
+    addPoints(pointsEarned)
   }
 
   return newOrder

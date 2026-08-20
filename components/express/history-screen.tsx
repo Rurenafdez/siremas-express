@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, Receipt, ChevronRight, Tag, RotateCcw, ShoppingBag, Check } from "lucide-react"
+import { ArrowLeft, Receipt, Tag, RotateCcw, Clock, Sparkles } from "lucide-react"
+import { type CartLine, cartCount, formatDOP } from "@/lib/express-data"
 import { type Order } from "@/lib/db/schema"
-import { type CartLine, formatDOP } from "@/lib/express-data"
 import { ReceiptSheet } from "./receipt-sheet"
 
 export function HistoryScreen({
-  orders,
+  orders = [],
   onRepeatOrder,
   onBack,
 }: {
@@ -29,24 +29,25 @@ export function HistoryScreen({
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </button>
-          <h1 className="text-lg font-extrabold text-foreground">
-            Historial de Compras
-          </h1>
+          <div className="leading-tight">
+            <h1 className="text-base font-extrabold text-foreground">Historial de Compras</h1>
+            <p className="text-xs text-muted-foreground">Tus compras con Compra Exprés</p>
+          </div>
         </header>
       </div>
 
-      <div className="no-scrollbar flex-1 space-y-3 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-4 space-y-3">
         {orders.length === 0 ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">
-            <Receipt className="mx-auto h-12 w-12 text-muted-foreground/40 mb-2" />
-            <p className="font-semibold">No tienes compras registradas aún.</p>
-            <p className="text-xs text-muted-foreground/80 mt-1">
-              Tus compras en Compra Exprés aparecerán aquí con su recibo digital.
+          <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+            <Clock className="h-12 w-12 text-muted-foreground/40 mb-3" />
+            <p className="font-extrabold text-base text-foreground">Sin compras registradas</p>
+            <p className="text-xs mt-1 max-w-[15rem]">
+              Tus compras realizadas mediante Compra Exprés aparecerán aquí automáticamente.
             </p>
           </div>
         ) : (
           orders.map((order) => {
-            const itemsCount = order.items.reduce((s, i) => s + i.qty, 0)
+            const itemsCount = cartCount(order.items)
             return (
               <div
                 key={order.id}
@@ -73,16 +74,24 @@ export function HistoryScreen({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between w-full text-[11px]">
-                    <span className="text-muted-foreground truncate max-w-[13rem]">
+                  <div className="flex items-center justify-between w-full text-[11px] flex-wrap gap-1">
+                    <span className="text-muted-foreground truncate max-w-[12rem]">
                       {order.paymentDetails?.description || "Tarjeta Visa"}
                     </span>
-                    {order.discounts > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-2 py-0.5 font-bold text-sirena-green">
-                        <Tag className="h-3 w-3" />
-                        Ahorro {formatDOP(order.discounts)}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {order.pointsEarned !== undefined && order.pointsEarned > 0 && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-extrabold text-secondary-foreground">
+                          <Sparkles className="h-2.5 w-2.5" />
+                          +{order.pointsEarned} pts
+                        </span>
+                      )}
+                      {order.discounts > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-2 py-0.5 font-bold text-sirena-green">
+                          <Tag className="h-3 w-3" />
+                          Ahorro {formatDOP(order.discounts)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -121,6 +130,7 @@ export function HistoryScreen({
           userName={selectedOrder.userName}
           fulfillment={selectedOrder.fulfillment}
           deliveryAddress={selectedOrder.deliveryAddress}
+          pointsEarned={selectedOrder.pointsEarned}
           onRepeatOrder={
             onRepeatOrder
               ? () => {

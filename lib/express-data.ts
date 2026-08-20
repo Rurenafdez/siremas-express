@@ -184,6 +184,16 @@ export function calculateSavingsEnRebaja(lines: CartLine[]): number {
     .reduce((s, l) => s + lineSaving(l), 0)
 }
 
+/** Point 24: 1 pt per RD$100, 2 pts per RD$100 on store brands (Wala), calculated per line rounded down */
+export function calculateEarnedPoints(lines: CartLine[]): number {
+  return lines.reduce((totalPoints, line) => {
+    const paidAmount = linePaid(line)
+    const rate = line.isStoreBrand ? 2 : 1
+    const linePoints = Math.floor((paidAmount / 100) * rate)
+    return totalPoints + linePoints
+  }, 0)
+}
+
 export function cartTotals(lines: CartLine[]) {
   const subtotal = lines.reduce((s, l) => s + lineRegular(l), 0)
   const discounts = lines.reduce((s, l) => s + lineSaving(l), 0)
