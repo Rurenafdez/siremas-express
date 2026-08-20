@@ -94,8 +94,8 @@ export function HomeScreen({
 
   return (
     <div className="flex h-full flex-col bg-background">
-      {/* Premium Header with solid breathing room */}
-      <div className="bg-primary text-primary-foreground shadow-md pb-6">
+      {/* Premium Header */}
+      <div className="bg-primary text-primary-foreground shadow-sm">
         <header className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground ring-2 ring-secondary/30 shadow-sm">
@@ -130,10 +130,10 @@ export function HomeScreen({
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6">
-        {/* Points & Savings Metric Cards positioned with clean overlap */}
-        <div className="-mt-3 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/80">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6 pt-4 space-y-4">
+        {/* Points & Savings Metric Cards with full rounded corners and clear spacing */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
             <div className="flex items-center gap-1.5 text-sirena-green">
               <Tag className="h-4 w-4" aria-hidden />
               <span className="text-xs font-bold">Ahorro total</span>
@@ -150,7 +150,7 @@ export function HomeScreen({
           <button
             type="button"
             onClick={count > 0 && onViewCart ? onViewCart : onStart}
-            className="rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-border/80 transition active:scale-[0.98] hover:ring-primary/40"
+            className="rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition active:scale-[0.98] hover:ring-primary/40"
           >
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <ShoppingCart className="h-4 w-4 text-primary" aria-hidden />
@@ -169,7 +169,7 @@ export function HomeScreen({
         <button
           type="button"
           onClick={onStart}
-          className="group mt-4 w-full overflow-hidden rounded-3xl bg-secondary p-5 text-left shadow-lg ring-1 ring-black/5 transition active:scale-[0.99] hover:shadow-xl"
+          className="group w-full overflow-hidden rounded-3xl bg-secondary p-5 text-left shadow-lg ring-1 ring-black/5 transition active:scale-[0.99] hover:shadow-xl"
         >
           <div className="flex items-center gap-2 text-secondary-foreground">
             <span className="flex h-7 items-center gap-1 rounded-full bg-primary px-3 text-[11px] font-extrabold uppercase tracking-wide text-primary-foreground shadow-sm">
@@ -190,7 +190,7 @@ export function HomeScreen({
         </button>
 
         {/* Promotions */}
-        <div className="mt-6">
+        <div className="pt-1">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-extrabold text-foreground">
               Promociones para ti
