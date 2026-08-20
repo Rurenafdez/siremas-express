@@ -119,6 +119,8 @@ export function HistoryScreen({
           paymentDetails={selectedOrder.paymentDetails}
           verificationPhotos={selectedOrder.verificationPhotos}
           userName={selectedOrder.userName}
+          fulfillment={selectedOrder.fulfillment}
+          deliveryAddress={selectedOrder.deliveryAddress}
           onRepeatOrder={
             onRepeatOrder
               ? () => {

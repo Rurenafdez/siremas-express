@@ -16,11 +16,14 @@ import {
   type Order,
   type Card,
   type PaymentDetails,
+  type FulfillmentType,
 } from "@/lib/db/schema"
 import {
   getUser,
   acceptTermsAndVerifyCedula,
   addCard as addCardToDb,
+  removeCard as removeCardFromDb,
+  setDefaultCard as setDefaultCardInDb,
   createOrder,
   getOrders,
   resetDemoUser,
@@ -29,6 +32,7 @@ import { HomeScreen } from "@/components/express/home-screen"
 import { IntroScreen } from "@/components/express/intro-screen"
 import { ScannerScreen } from "@/components/express/scanner-screen"
 import { CartScreen } from "@/components/express/cart-screen"
+import { SirenaGoDeliveryScreen } from "@/components/express/sirenago-delivery-screen"
 import { VerifyScreen } from "@/components/express/verify-screen"
 import { QrScreen } from "@/components/express/qr-screen"
 import { PaymentScreen } from "@/components/express/payment-screen"
@@ -44,6 +48,7 @@ type Screen =
   | "intro"
   | "scan"
   | "cart"
+  | "sirenago-delivery"
   | "qr"
   | "ai-verify"
   | "payment"
@@ -63,6 +68,9 @@ export function SiremasApp() {
   const [orderId, setOrderId] = useState("LS-482103")
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | undefined>(undefined)
   const [verificationPhotos, setVerificationPhotos] = useState<string[]>([])
+  // Point 18: SirenaGo fulfillment state
+  const [fulfillment, setFulfillment] = useState<FulfillmentType | undefined>(undefined)
+  const [deliveryAddress, setDeliveryAddress] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     // Load persisted user & orders on mount
@@ -102,7 +110,6 @@ export function SiremasApp() {
       addToCart(step.product)
       setLastScanned({ name: step.product.name, key: Date.now() })
     } else if (step.type === "unavailable") {
-      // Automatically detect unavailable product (Frito Lay Original)
       setUnavailableOpen(true)
     }
   }
@@ -111,7 +118,6 @@ export function SiremasApp() {
     addToCart(SUBSTITUTE, 1)
     setLastScanned({ name: SUBSTITUTE.name, key: Date.now() })
     setUnavailableOpen(false)
-    // Trigger smart promo sheet right after substitute event
     setTimeout(() => {
       setPromoOpen(true)
     }, 350)
@@ -157,11 +163,23 @@ export function SiremasApp() {
     setScreen("qr")
   }
 
+  // Point 17: SirenaGo → Point 18: delivery selection before payment
+  function handleSirenaGo() {
+    setOrderId("LS-" + Math.floor(100000 + Math.random() * 900000))
+    setScreen("sirenago-delivery")
+  }
+
+  // Point 18: after fulfillment choice, go to payment
+  function handleFulfillmentConfirm(choice: FulfillmentType, address?: string) {
+    setFulfillment(choice)
+    setDeliveryAddress(address)
+    setScreen("payment")
+  }
+
   function handlePaid(details: PaymentDetails) {
     setPaymentDetails(details)
     const { subtotal, discounts, savingsEnRebaja, total } = cartTotals(cart)
 
-    // Save order to persistent repository with verification photos for full traceability
     const newOrder = createOrder({
       orderId,
       items: cart,
@@ -173,17 +191,29 @@ export function SiremasApp() {
       verificationPhotos: verificationPhotos.length > 0 ? verificationPhotos : ["/products/jugo-wala.png"],
       timeSavedMin: 12,
       userName: user?.name || "Camila Ramírez",
+      fulfillment,
+      deliveryAddress,
     })
 
-    // Update local orders list & user state
     setOrders((prev) => [newOrder, ...prev])
     setUser(getUser())
 
     setScreen("success")
   }
 
+  // Point 20: card management — always re-read from storage to keep UI in sync
   function handleAddCard(cardData: Omit<Card, "id">) {
     addCardToDb(cardData)
+    setUser(getUser())
+  }
+
+  function handleRemoveCard(cardId: string) {
+    removeCardFromDb(cardId)
+    setUser(getUser())
+  }
+
+  function handleSetDefaultCard(cardId: string) {
+    setDefaultCardInDb(cardId)
     setUser(getUser())
   }
 
@@ -196,6 +226,8 @@ export function SiremasApp() {
     setReceiptOpen(false)
     setPaymentDetails(undefined)
     setVerificationPhotos([])
+    setFulfillment(undefined)
+    setDeliveryAddress(undefined)
     setScreen("home")
   }
 
@@ -206,13 +238,12 @@ export function SiremasApp() {
     handleReset()
   }
 
+  // Point 15: Repeat purchase — preload items into cart and go to Cart screen
   function handleRepeatOrder(pastItems: CartLine[]) {
-    // Point 15: Preload items from past order into active cart and go to Cart
     setCart(pastItems.map((item) => ({ ...item })))
     setScreen("cart")
   }
 
-  // If user hasn't accepted terms or verified cédula, show Onboarding
   if (user && (!user.hasAcceptedTerms || !user.cedulaVerified)) {
     return (
       <div className="relative h-full w-full overflow-hidden bg-background">
@@ -277,8 +308,16 @@ export function SiremasApp() {
           onDec={handleDec}
           onRemove={handleRemove}
           onVerify={handleGoToQr}
-          onSirenaGo={() => setScreen("payment")}
+          onSirenaGo={handleSirenaGo}
           onBack={() => setScreen("scan")}
+        />
+      )}
+
+      {/* Point 18: SirenaGo delivery/pickup selection */}
+      {screen === "sirenago-delivery" && (
+        <SirenaGoDeliveryScreen
+          onConfirm={handleFulfillmentConfirm}
+          onBack={() => setScreen("cart")}
         />
       )}
 
@@ -308,8 +347,12 @@ export function SiremasApp() {
           cart={cart}
           user={user || undefined}
           onAddCard={handleAddCard}
+          onRemoveCard={handleRemoveCard}
+          onSetDefaultCard={handleSetDefaultCard}
           onPaid={handlePaid}
-          onBack={() => setScreen("ai-verify")}
+          onBack={() =>
+            fulfillment ? setScreen("sirenago-delivery") : setScreen("ai-verify")
+          }
         />
       )}
 
@@ -317,6 +360,8 @@ export function SiremasApp() {
         <SuccessScreen
           cart={cart}
           paymentDetails={paymentDetails}
+          fulfillment={fulfillment}
+          deliveryAddress={deliveryAddress}
           onReceipt={() => setReceiptOpen(true)}
           onFinish={handleReset}
         />
@@ -347,6 +392,8 @@ export function SiremasApp() {
           paymentDetails={paymentDetails}
           verificationPhotos={verificationPhotos}
           userName={user?.name || "Camila Ramírez"}
+          fulfillment={fulfillment}
+          deliveryAddress={deliveryAddress}
           onClose={() => setReceiptOpen(false)}
         />
       )}

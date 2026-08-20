@@ -10,22 +10,33 @@ import {
   Sparkles,
   ShieldCheck,
   AlertCircle,
+  Trash2,
+  Star,
+  ChevronDown,
+  ChevronUp,
+  Smartphone,
 } from "lucide-react"
 import { type CartLine, cartTotals, formatDOP } from "@/lib/express-data"
 import { type User, type Card, type PaymentDetails } from "@/lib/db/schema"
 import { processPayment } from "@/lib/payment-service"
 import { AddCardModal } from "./add-card-modal"
 
+type OtherSubMethod = "tpago" | "paypal" | null
+
 export function PaymentScreen({
   cart,
   user,
   onAddCard,
+  onRemoveCard,
+  onSetDefaultCard,
   onPaid,
   onBack,
 }: {
   cart: CartLine[]
   user?: User
   onAddCard?: (card: Omit<Card, "id">, save: boolean) => void
+  onRemoveCard?: (cardId: string) => void
+  onSetDefaultCard?: (cardId: string) => void
   onPaid: (paymentDetails: PaymentDetails) => void
   onBack: () => void
 }) {
@@ -41,11 +52,14 @@ export function PaymentScreen({
       expYear: "28",
     },
   ]
-  const defaultCard = savedCards[0]
+  const defaultCardId = user?.defaultCardId ?? savedCards[0]?.id
+  const defaultCard = savedCards.find((c) => c.id === defaultCardId) ?? savedCards[0]
 
   // Pre-selected as "saved" (card) per requirement 13
   const [selected, setSelected] = useState<"saved" | "siremas_points" | "other">("saved")
-  const [selectedCardId, setSelectedCardId] = useState<string>(defaultCard.id)
+  const [selectedCardId, setSelectedCardId] = useState<string>(defaultCard?.id ?? "")
+  const [otherSubMethod, setOtherSubMethod] = useState<OtherSubMethod>(null)
+  const [otherExpanded, setOtherExpanded] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [showAddCard, setShowAddCard] = useState(false)
   const [customCard, setCustomCard] = useState<Card | null>(null)
@@ -59,11 +73,19 @@ export function PaymentScreen({
   const cardRemainder = pointsCoverAll ? 0 : total - userPoints
 
   async function handlePay() {
+    if (selected === "other" && !otherSubMethod) {
+      setErrorMessage("Elige un método de pago alternativo (tPago o PayPal).")
+      return
+    }
     setProcessing(true)
     setErrorMessage(null)
     try {
+      const methodKey =
+        selected === "other"
+          ? (otherSubMethod as "tpago" | "paypal")
+          : selected
       const result = await processPayment({
-        selectedMethod: selected,
+        selectedMethod: methodKey,
         total,
         userPoints,
         savedCard: activeCard,
@@ -88,10 +110,25 @@ export function PaymentScreen({
       id: "temp_card_" + Date.now(),
     }
     setCustomCard(newCard)
+    setSelectedCardId(newCard.id)
     setSelected("saved")
     if (save && onAddCard) {
       onAddCard(newCardData, true)
     }
+  }
+
+  function payButtonLabel() {
+    if (processing) return "Procesando pago seguro…"
+    if (selected === "other") {
+      if (!otherSubMethod) return `Pagar ${formatDOP(total)}`
+      return `Pagar con ${otherSubMethod === "tpago" ? "tPago" : "PayPal"} (${formatDOP(total)})`
+    }
+    if (selected === "siremas_points") {
+      return pointsCoverAll
+        ? `Pagar con ${pointsUsed} pts Siremás`
+        : `Pagar (${pointsUsed} pts + RD$${cardRemainder})`
+    }
+    return `Pagar con ${activeCard?.brand} •••• ${activeCard?.last4} (${formatDOP(total)})`
   }
 
   return (
@@ -134,12 +171,13 @@ export function PaymentScreen({
 
         {/* Methods Selection */}
         <div className="space-y-2.5">
-          {/* Option 1: Saved Card (Marked as RECOMMENDED per requirement 13) */}
+          {/* Option 1: Saved Cards (Marked as RECOMMENDED per requirement 13) */}
           <div
             className={`w-full rounded-2xl bg-card p-3.5 ring-1 transition ${
               selected === "saved" ? "ring-2 ring-primary bg-primary/5" : "ring-border"
             }`}
           >
+            {/* Default card row */}
             <div
               onClick={() => setSelected("saved")}
               className="flex items-center gap-3 w-full cursor-pointer"
@@ -150,7 +188,9 @@ export function PaymentScreen({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-foreground">
-                    {customCard ? `${customCard.brand} •••• ${customCard.last4}` : `${activeCard.brand} •••• ${activeCard.last4}`}
+                    {customCard
+                      ? `${customCard.brand} •••• ${customCard.last4}`
+                      : `${activeCard?.brand} •••• ${activeCard?.last4}`}
                   </p>
                   <span className="rounded-full bg-sirena-yellow px-2 py-0.5 text-[10px] font-extrabold text-sirena-navy-deep">
                     Recomendado
@@ -169,7 +209,52 @@ export function PaymentScreen({
               </span>
             </div>
 
-            {/* Add Card Button inside card box */}
+            {/* Additional saved cards list */}
+            {savedCards.length > 1 && (
+              <div className="mt-3 space-y-2 border-t border-border/60 pt-2.5">
+                {savedCards.map((card) => (
+                  <div
+                    key={card.id}
+                    className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 cursor-pointer transition ${
+                      selectedCardId === card.id && !customCard ? "bg-primary/10" : "hover:bg-muted/60"
+                    }`}
+                    onClick={() => { setSelectedCardId(card.id); setCustomCard(null); setSelected("saved") }}
+                  >
+                    <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="flex-1 text-xs font-semibold text-foreground">
+                      {card.brand} •••• {card.last4}
+                    </span>
+                    {card.id === defaultCardId && (
+                      <span className="text-[10px] text-sirena-green font-bold">Default</span>
+                    )}
+                    <div className="flex items-center gap-1">
+                      {card.id !== defaultCardId && onSetDefaultCard && (
+                        <button
+                          type="button"
+                          title="Hacer predeterminada"
+                          onClick={(e) => { e.stopPropagation(); onSetDefaultCard(card.id) }}
+                          className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-secondary transition"
+                        >
+                          <Star className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {savedCards.length > 1 && onRemoveCard && (
+                        <button
+                          type="button"
+                          title="Eliminar tarjeta"
+                          onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id) }}
+                          className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-destructive transition"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Card Button */}
             <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2.5">
               <button
                 type="button"
@@ -195,9 +280,7 @@ export function PaymentScreen({
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-foreground">Puntos Siremás</p>
-                </div>
+                <p className="text-sm font-bold text-foreground">Puntos Siremás</p>
                 <p className="text-xs text-muted-foreground">
                   {pointsCoverAll
                     ? `${userPoints.toLocaleString("es-DO")} pts disponibles · Cubre el total`
@@ -226,38 +309,114 @@ export function PaymentScreen({
                   <div className="space-y-0.5 text-[11px]">
                     <p className="text-foreground font-semibold">Desglose combinado:</p>
                     <p>• {pointsUsed} Puntos Siremás: <span className="font-bold text-sirena-green">-RD${pointsUsed}</span></p>
-                    <p>• Restante a {activeCard.brand} •••• {activeCard.last4}: <span className="font-bold text-foreground">RD${cardRemainder}</span></p>
+                    <p>• Restante a {activeCard?.brand} •••• {activeCard?.last4}: <span className="font-bold text-foreground">RD${cardRemainder}</span></p>
                   </div>
                 )}
               </div>
             )}
           </button>
 
-          {/* Option 3: Other Methods */}
-          <button
-            type="button"
-            onClick={() => setSelected("other")}
-            className={`flex w-full items-center gap-3 rounded-2xl bg-card p-3.5 text-left ring-1 transition ${
+          {/* Option 3: Other Methods — tPago / PayPal (Point 21: now functional) */}
+          <div
+            className={`rounded-2xl bg-card ring-1 transition overflow-hidden ${
               selected === "other" ? "ring-2 ring-primary bg-primary/5" : "ring-border"
             }`}
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
-              <Wallet className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-foreground">Otros métodos</p>
-              <p className="text-xs text-muted-foreground">tPago, PayPal, Enlace Express</p>
-            </div>
-            <span
-              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                selected === "other"
-                  ? "bg-primary text-primary-foreground"
-                  : "ring-1 ring-border"
-              }`}
+            <button
+              type="button"
+              onClick={() => {
+                setSelected("other")
+                setOtherExpanded(true)
+              }}
+              className="flex w-full items-center gap-3 p-3.5 text-left"
             >
-              {selected === "other" && <Check className="h-3.5 w-3.5" />}
-            </span>
-          </button>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
+                <Wallet className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground">Otros métodos</p>
+                <p className="text-xs text-muted-foreground">
+                  {otherSubMethod === "tpago" ? "tPago seleccionado" : otherSubMethod === "paypal" ? "PayPal seleccionado" : "tPago, PayPal, Enlace Express"}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                    selected === "other"
+                      ? "bg-primary text-primary-foreground"
+                      : "ring-1 ring-border"
+                  }`}
+                >
+                  {selected === "other" && <Check className="h-3.5 w-3.5" />}
+                </span>
+                {selected === "other" ? (
+                  otherExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                ) : null}
+              </div>
+            </button>
+
+            {/* Sub-methods panel — expands when "other" is selected */}
+            {selected === "other" && otherExpanded && (
+              <div className="border-t border-border/60 px-4 pb-4 pt-3 space-y-2">
+                <p className="text-xs font-bold text-foreground mb-2">Elige tu método:</p>
+
+                {/* tPago */}
+                <button
+                  type="button"
+                  onClick={() => setOtherSubMethod("tpago")}
+                  className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ring-1 ${
+                    otherSubMethod === "tpago" ? "ring-primary bg-primary/10" : "ring-border hover:bg-muted/60"
+                  }`}
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700 font-extrabold text-xs">
+                    tP
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-foreground">tPago</p>
+                    <p className="text-xs text-muted-foreground">Pago móvil dominicano</p>
+                  </div>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded-full ${
+                    otherSubMethod === "tpago" ? "bg-primary text-primary-foreground" : "ring-1 ring-border"
+                  }`}>
+                    {otherSubMethod === "tpago" && <Check className="h-3 w-3" />}
+                  </span>
+                </button>
+
+                {/* PayPal */}
+                <button
+                  type="button"
+                  onClick={() => setOtherSubMethod("paypal")}
+                  className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ring-1 ${
+                    otherSubMethod === "paypal" ? "ring-primary bg-primary/10" : "ring-border hover:bg-muted/60"
+                  }`}
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-extrabold text-xs">
+                    PP
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-foreground">PayPal</p>
+                    <p className="text-xs text-muted-foreground">Pago internacional</p>
+                  </div>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded-full ${
+                    otherSubMethod === "paypal" ? "bg-primary text-primary-foreground" : "ring-1 ring-border"
+                  }`}>
+                    {otherSubMethod === "paypal" && <Check className="h-3 w-3" />}
+                  </span>
+                </button>
+
+                <p className="text-[10px] text-muted-foreground pt-1">
+                  <Smartphone className="inline h-3 w-3 mr-0.5" />
+                  Punto de integración listo para conectar SDK real de tPago/PayPal.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Security badge */}
+        <div className="flex items-center justify-center gap-1.5 py-1 text-[11px] text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-sirena-green" />
+          Transacción encriptada y segura
         </div>
       </div>
 
@@ -267,15 +426,9 @@ export function PaymentScreen({
           type="button"
           onClick={handlePay}
           disabled={processing}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground active:scale-[0.99] disabled:opacity-70 transition"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground active:scale-[0.99] disabled:opacity-70 transition shadow-md"
         >
-          {processing
-            ? "Procesando pago seguro…"
-            : selected === "siremas_points"
-            ? pointsCoverAll
-              ? `Pagar con ${pointsUsed} pts Siremás`
-              : `Pagar (${pointsUsed} pts + RD$${cardRemainder})`
-            : `Pagar con ${activeCard.brand} •••• ${activeCard.last4} (${formatDOP(total)})`}
+          {payButtonLabel()}
         </button>
       </div>
 

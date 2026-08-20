@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Receipt, Check, Tag, ShieldCheck, Camera, Sparkles, RotateCcw } from "lucide-react"
+import { Receipt, Check, Tag, ShieldCheck, Camera, RotateCcw, Store, Home } from "lucide-react"
 import {
   type CartLine,
   cartTotals,
@@ -19,6 +19,8 @@ export function ReceiptSheet({
   paymentDetails,
   verificationPhotos = [],
   userName = "Camila Ramírez",
+  fulfillment,
+  deliveryAddress,
   onRepeatOrder,
   onClose,
 }: {
@@ -27,6 +29,8 @@ export function ReceiptSheet({
   paymentDetails?: PaymentDetails
   verificationPhotos?: string[]
   userName?: string
+  fulfillment?: "pickup" | "delivery"
+  deliveryAddress?: string
   onRepeatOrder?: () => void
   onClose: () => void
 }) {
@@ -71,7 +75,20 @@ export function ReceiptSheet({
             {paymentDesc}
           </span>
         </div>
+        {fulfillment && (
+          <div className="flex justify-between items-start gap-2">
+            <span>Entrega:</span>
+            <span className="font-semibold text-right text-foreground flex items-center gap-1">
+              {fulfillment === "pickup" ? (
+                <><Store className="h-3.5 w-3.5 text-primary" /> Retiro en tienda</>
+              ) : (
+                <><Home className="h-3.5 w-3.5 text-primary" /> {deliveryAddress || "Entrega a domicilio"}</>
+              )}
+            </span>
+          </div>
+        )}
       </div>
+
 
       {/* Cart Items Breakdown */}
       <div className="no-scrollbar my-3 max-h-40 space-y-2 overflow-y-auto border-y border-dashed border-border py-3">

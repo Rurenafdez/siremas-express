@@ -1,19 +1,30 @@
 "use client"
 
-import { Check, Tag, Timer, Receipt, Sparkles, Clock } from "lucide-react"
+import { Check, Tag, Timer, Receipt, Sparkles, CreditCard, Wallet, Home, Store, Zap } from "lucide-react"
 import { type CartLine, cartTotals, formatDOP } from "@/lib/express-data"
 import { type PaymentDetails } from "@/lib/db/schema"
 
 const TIME_SAVED_MIN = 12
 
+function PaymentMethodIcon({ type }: { type?: string }) {
+  if (type === "points") return <Sparkles className="h-4 w-4 text-secondary" />
+  if (type === "tpago") return <Wallet className="h-4 w-4 text-blue-300" />
+  if (type === "paypal") return <Wallet className="h-4 w-4 text-indigo-300" />
+  return <CreditCard className="h-4 w-4 text-primary-foreground/60" />
+}
+
 export function SuccessScreen({
   cart,
   paymentDetails,
+  fulfillment,
+  deliveryAddress,
   onReceipt,
   onFinish,
 }: {
   cart: CartLine[]
   paymentDetails?: PaymentDetails
+  fulfillment?: "pickup" | "delivery"
+  deliveryAddress?: string
   onReceipt: () => void
   onFinish: () => void
 }) {
@@ -23,8 +34,9 @@ export function SuccessScreen({
   return (
     <div className="flex h-full flex-col bg-sirena-green text-primary-foreground">
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        {/* Success badge */}
         <div className="animate-pop-in flex h-20 w-20 items-center justify-center rounded-full bg-primary-foreground/15">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-foreground">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-foreground shadow-md">
             <Check className="h-8 w-8 text-sirena-green" aria-hidden />
           </div>
         </div>
@@ -32,21 +44,47 @@ export function SuccessScreen({
         <h1 className="mt-4 text-2xl font-extrabold text-balance">
           ¡Compra completada!
         </h1>
-        <p className="mt-1 max-w-[17rem] text-xs text-primary-foreground/85 text-pretty">
+        <p className="mt-1.5 max-w-[17rem] text-xs text-primary-foreground/80 text-pretty leading-relaxed">
           Gracias por comprar con Compra Exprés. ¡Llegas a tiempo a tu próximo destino!
         </p>
 
         {/* Stat cards */}
         <div className="mt-5 w-full space-y-2.5 text-left">
           {/* Payment Method Banner */}
-          <div className="rounded-2xl bg-primary-foreground/15 px-4 py-2.5 text-xs text-primary-foreground/95">
-            <span className="text-[10px] uppercase font-bold text-primary-foreground/70 block">
-              Método de pago
-            </span>
-            <span className="font-bold text-sm truncate block mt-0.5">
-              {paymentDesc}
-            </span>
+          <div className="rounded-2xl bg-primary-foreground/15 px-4 py-3 flex items-center gap-2.5">
+            <PaymentMethodIcon type={paymentDetails?.type} />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-bold text-primary-foreground/65 block">
+                Método de pago
+              </span>
+              <span className="font-bold text-sm truncate block mt-0.5">
+                {paymentDesc}
+              </span>
+            </div>
           </div>
+
+          {/* Fulfillment banner — shows if SirenaGo route was used */}
+          {fulfillment && (
+            <div className="rounded-2xl bg-primary-foreground/15 px-4 py-3 flex items-center gap-2.5">
+              {fulfillment === "pickup" ? (
+                <Store className="h-4 w-4 text-primary-foreground/60" />
+              ) : (
+                <Home className="h-4 w-4 text-primary-foreground/60" />
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] uppercase font-bold text-primary-foreground/65 block">
+                  <Zap className="inline h-3 w-3 mr-0.5" />SirenaGo
+                </span>
+                <span className="font-bold text-sm block mt-0.5">
+                  {fulfillment === "pickup"
+                    ? "Retiro en tienda"
+                    : deliveryAddress
+                    ? `Entrega a: ${deliveryAddress}`
+                    : "Entrega a domicilio"}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between rounded-2xl bg-primary-foreground/12 px-4 py-3">
             <span className="text-xs font-medium text-primary-foreground/85">
@@ -81,7 +119,7 @@ export function SuccessScreen({
               <p className="mt-0.5 text-base font-extrabold tabular-nums">
                 {TIME_SAVED_MIN} min
               </p>
-              <span className="text-[10px] text-primary-foreground/75 block font-medium">
+              <span className="text-[10px] text-primary-foreground/70 block font-medium">
                 Sin filas en caja
               </span>
             </div>
@@ -89,7 +127,7 @@ export function SuccessScreen({
         </div>
       </div>
 
-      <div className="space-y-2 px-6 pb-6">
+      <div className="space-y-2 px-6 pb-7">
         <button
           type="button"
           onClick={onReceipt}
@@ -101,9 +139,9 @@ export function SuccessScreen({
         <button
           type="button"
           onClick={onFinish}
-          className="w-full rounded-2xl py-2.5 text-xs font-bold text-primary-foreground/90 transition active:scale-95"
+          className="w-full rounded-2xl py-2.5 text-xs font-bold text-primary-foreground/85 transition active:scale-95"
         >
-          Finalizar
+          Finalizar y volver al inicio
         </button>
       </div>
     </div>

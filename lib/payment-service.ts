@@ -1,7 +1,7 @@
 import { PaymentDetails, Card } from "./db/schema"
 
 export type ProcessPaymentParams = {
-  selectedMethod: "siremas_points" | "saved" | "new" | "other"
+  selectedMethod: "siremas_points" | "saved" | "new" | "other" | "tpago" | "paypal"
   total: number
   userPoints: number
   savedCard?: Card
@@ -79,12 +79,34 @@ export async function processPayment({
     }
   }
 
-  // Other methods (tPago, etc.)
+  if (selectedMethod === "tpago") {
+    return {
+      success: true,
+      paymentDetails: {
+        type: "tpago",
+        description: "Pagado con tPago",
+        total,
+      },
+    }
+  }
+
+  if (selectedMethod === "paypal") {
+    return {
+      success: true,
+      paymentDetails: {
+        type: "paypal",
+        description: "Pagado con PayPal",
+        total,
+      },
+    }
+  }
+
+  // Generic other
   return {
     success: true,
     paymentDetails: {
       type: "other",
-      description: "Pagado con tPago / Enlace Express",
+      description: "Pagado con método alternativo",
       total,
     },
   }

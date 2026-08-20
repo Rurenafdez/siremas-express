@@ -20,7 +20,7 @@ export type User = {
   defaultCardId?: string
 }
 
-export type PaymentMethodType = "points" | "card" | "split" | "other"
+export type PaymentMethodType = "points" | "card" | "split" | "other" | "tpago" | "paypal"
 
 export type PaymentDetails = {
   type: PaymentMethodType
@@ -35,6 +35,8 @@ export type PaymentDetails = {
   total: number
 }
 
+export type FulfillmentType = "pickup" | "delivery"
+
 export type Order = {
   id: string
   date: string
@@ -47,4 +49,8 @@ export type Order = {
   verificationPhotos?: string[]
   timeSavedMin: number
   userName: string
+  /** SirenaGo fulfillment: pickup in store or home delivery */
+  fulfillment?: FulfillmentType
+  /** Delivery address when fulfillment === "delivery" */
+  deliveryAddress?: string
 }

@@ -1,4 +1,4 @@
-import { QrCode as QrIcon, ShieldCheck, ChevronRight, ArrowLeft, Store } from "lucide-react"
+import { QrCode as QrIcon, ShieldCheck, ChevronRight, ArrowLeft, Store, Clock } from "lucide-react"
 import { type CartLine, cartTotals, cartCount, formatDOP } from "@/lib/express-data"
 import { QrCode } from "./qr-code"
 
@@ -18,7 +18,8 @@ export function QrScreen({
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
         {onBack ? (
           <button
             type="button"
@@ -35,50 +36,59 @@ export function QrScreen({
         <span className="w-9" />
       </div>
 
-      <div className="flex flex-1 flex-col items-center px-6 pb-6 pt-3 overflow-y-auto no-scrollbar">
-        <div className="flex items-center gap-2 rounded-full bg-sirena-yellow-soft px-3 py-1.5 text-xs font-bold text-secondary-foreground">
+      <div className="flex flex-1 flex-col items-center px-6 pb-6 pt-5 overflow-y-auto no-scrollbar">
+        {/* Status badge */}
+        <div className="flex items-center gap-2 rounded-full bg-sirena-yellow-soft px-4 py-1.5 text-xs font-bold text-secondary-foreground">
           <QrIcon className="h-4 w-4" aria-hidden />
-          Pase de salida generado
+          Pase generado exitosamente
         </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground text-pretty">
-          Orden generada para verificar con IA y validar en estación.
+
+        <p className="mt-2 text-center text-xs text-muted-foreground text-pretty max-w-[18rem]">
+          Muestra este código en la estación de salida para que la IA verifique tu compra.
         </p>
 
         {/* QR card */}
-        <div className="mt-4 w-full rounded-3xl bg-card p-5 shadow-lg ring-1 ring-border">
-          <div className="mx-auto max-w-[15rem] rounded-2xl bg-background p-4 ring-1 ring-border">
+        <div className="mt-5 w-full rounded-3xl bg-card p-5 shadow-lg ring-1 ring-border">
+          <div className="mx-auto max-w-[14rem] rounded-2xl bg-background p-4 ring-1 ring-border">
             <QrCode value={orderId} />
           </div>
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Orden</span>
-            <span className="font-bold tabular-nums text-foreground">
-              {orderId}
-            </span>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {count} {count === 1 ? "artículo" : "artículos"} · Total
-            </span>
-            <span className="font-extrabold tabular-nums text-foreground">
-              {formatDOP(total)}
-            </span>
+
+          <div className="mt-4 space-y-1.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Orden</span>
+              <span className="font-extrabold tabular-nums text-foreground">{orderId}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {count} {count === 1 ? "artículo" : "artículos"}
+              </span>
+              <span className="font-extrabold tabular-nums text-foreground">{formatDOP(total)}</span>
+            </div>
           </div>
         </div>
 
         {/* Kiosk hint */}
-        <div className="mt-4 flex w-full items-center gap-3 rounded-2xl bg-muted p-3.5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+        <div className="mt-4 flex w-full items-center gap-3 rounded-2xl bg-muted p-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Store className="h-5 w-5" aria-hidden />
           </div>
-          <p className="text-xs text-muted-foreground text-pretty">
-            Siguiente paso: Confirma tus productos con la cámara de IA antes de realizar el pago.
-          </p>
+          <div className="flex-1">
+            <p className="text-xs font-bold text-foreground">Próximo paso</p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+              Dirígete a la estación de salida y escanea este QR para iniciar la verificación IA.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" aria-hidden />
+          Pase válido por 15 minutos
         </div>
 
         <button
           type="button"
           onClick={onArrive}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground transition active:scale-[0.99]"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground transition active:scale-[0.99] shadow-md"
         >
           <ShieldCheck className="h-5 w-5 text-secondary" aria-hidden />
           Verificar compra con IA

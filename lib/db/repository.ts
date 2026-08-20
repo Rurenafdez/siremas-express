@@ -1,4 +1,4 @@
-import { User, Order, Card, PaymentDetails } from "./schema"
+import { User, Order, Card, PaymentDetails, FulfillmentType } from "./schema"
 import {
   loadUserFromStorage,
   saveUserToStorage,
@@ -40,6 +40,21 @@ export function addCard(cardData: Omit<Card, "id">): Card {
   return newCard
 }
 
+export function removeCard(cardId: string): User {
+  const user = loadUserFromStorage()
+  const updatedCards = user.savedCards.filter((c) => c.id !== cardId)
+  // If removed card was default, set first remaining as default
+  const newDefault =
+    user.defaultCardId === cardId
+      ? updatedCards[0]?.id
+      : user.defaultCardId
+  return updateUser({ savedCards: updatedCards, defaultCardId: newDefault })
+}
+
+export function setDefaultCard(cardId: string): User {
+  return updateUser({ defaultCardId: cardId })
+}
+
 export function deductPoints(pointsToDeduct: number): User {
   const user = loadUserFromStorage()
   const updatedPoints = Math.max(0, user.points - pointsToDeduct)
@@ -61,6 +76,8 @@ export function createOrder({
   verificationPhotos = [],
   timeSavedMin = 12,
   userName = "Camila Ramírez",
+  fulfillment,
+  deliveryAddress,
 }: {
   orderId: string
   items: CartLine[]
@@ -72,6 +89,8 @@ export function createOrder({
   verificationPhotos?: string[]
   timeSavedMin?: number
   userName?: string
+  fulfillment?: FulfillmentType
+  deliveryAddress?: string
 }): Order {
   const orders = loadOrdersFromStorage()
   const now = new Date()
@@ -93,6 +112,8 @@ export function createOrder({
     verificationPhotos,
     timeSavedMin,
     userName,
+    fulfillment,
+    deliveryAddress,
   }
 
   // Prepend new order to list
