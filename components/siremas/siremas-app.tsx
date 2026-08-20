@@ -5,6 +5,7 @@ import {
   type CartLine,
   type Product,
   cartTotals,
+  CATALOG,
   UNAVAILABLE,
   SUBSTITUTE,
   PROMO,
@@ -57,11 +58,9 @@ type Screen =
 export function SiremasApp() {
   const [user, setUser] = useState<User | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
-
-  // Point 23: Replace single screen state with a navigation stack.
-  // The current screen is always the top of the stack.
+  // Point 23: Navigation Stack for bidirectional navigation without losing state
   const [screenStack, setScreenStack] = useState<Screen[]>(["home"])
-  const screen = screenStack[screenStack.length - 1]
+  const screen = screenStack[screenStack.length - 1] ?? "home"
 
   const [cart, setCart] = useState<CartLine[]>([])
   const [scanIndex, setScanIndex] = useState(0)
@@ -77,26 +76,21 @@ export function SiremasApp() {
   const [deliveryAddress, setDeliveryAddress] = useState<string | undefined>(undefined)
 
   useEffect(() => {
+    // Load persisted user & orders on mount
     const loadedUser = getUser()
     setUser(loadedUser)
     setOrders(getOrders())
   }, [])
 
-  // ── Navigation helpers (Point 23) ───────────────────────────────────────
-  /** Push a new screen onto the stack (navigate forward). */
+  // Stack navigation helpers
   function goTo(nextScreen: Screen) {
     setScreenStack((prev) => [...prev, nextScreen])
   }
 
-  /**
-   * Pop the top screen off the stack (navigate back).
-   * If already at root ("home"), this is a no-op.
-   */
   function goBack() {
     setScreenStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
   }
 
-  // ── Demo scan logic ─────────────────────────────────────────────────────
   const scanDone = scanIndex >= DEMO_SCAN_STEPS.length
   const nextStep = !scanDone ? DEMO_SCAN_STEPS[scanIndex] : null
   const scanHint = nextStep ? `Siguiente: ${nextStep.product.name}` : "Todo escaneado"
@@ -104,7 +98,6 @@ export function SiremasApp() {
   function handleAcceptOnboarding(cedula: string, name: string) {
     const updated = acceptTermsAndVerifyCedula(cedula, name)
     setUser(updated)
-    // Replace the stack with home (onboarding is not in the nav stack)
     setScreenStack(["home"])
   }
 
@@ -173,9 +166,12 @@ export function SiremasApp() {
     setCart((prev) => prev.filter((l) => l.id !== id))
   }
 
-  // Point 17: two checkout routes from Cart
+  function handleStart() {
+    goTo("intro")
+  }
+
   function handleGoToQr() {
-    // Generate a fresh order ID every time user enters QR flow
+    // Regenerate fresh order ID whenever entering QR Pass
     setOrderId("LS-" + Math.floor(100000 + Math.random() * 900000))
     goTo("qr")
   }
@@ -215,12 +211,11 @@ export function SiremasApp() {
     setOrders((prev) => [newOrder, ...prev])
     setUser(getUser())
 
-    // Navigate to success — do NOT add more screens after success
-    // (user cannot go back to payment from success)
+    // Once completed, replace stack with success so going back is controlled
     setScreenStack(["home", "success"])
   }
 
-  // Point 20: card management
+  // Point 20: card management — always re-read from storage to keep UI in sync
   function handleAddCard(cardData: Omit<Card, "id">) {
     addCardToDb(cardData)
     setUser(getUser())
@@ -236,7 +231,6 @@ export function SiremasApp() {
     setUser(getUser())
   }
 
-  /** Reset all transient state and return to home. */
   function handleReset() {
     setCart([])
     setScanIndex(0)
@@ -248,7 +242,6 @@ export function SiremasApp() {
     setVerificationPhotos([])
     setFulfillment(undefined)
     setDeliveryAddress(undefined)
-    // Clear the stack — back to home root
     setScreenStack(["home"])
   }
 
@@ -262,11 +255,9 @@ export function SiremasApp() {
   // Point 15: Repeat purchase — preload items into cart and go to Cart screen
   function handleRepeatOrder(pastItems: CartLine[]) {
     setCart(pastItems.map((item) => ({ ...item })))
-    // Push cart on top of wherever we are (history)
     goTo("cart")
   }
 
-  // ── Onboarding gate ─────────────────────────────────────────────────────
   if (user && (!user.hasAcceptedTerms || !user.cedulaVerified)) {
     return (
       <div className="relative h-full w-full overflow-hidden bg-background">
@@ -282,7 +273,7 @@ export function SiremasApp() {
           userName={user?.name || "Camila Ramírez"}
           points={user?.points ?? 2450}
           cart={cart}
-          onStart={() => goTo("intro")}
+          onStart={handleStart}
           onViewCart={() => goTo("cart")}
           onViewHistory={() => {
             setOrders(getOrders())
@@ -377,7 +368,6 @@ export function SiremasApp() {
         />
       )}
 
-      {/* Point 23: Success cannot go back — stack is reset to ["home", "success"] by handlePaid */}
       {screen === "success" && (
         <SuccessScreen
           cart={cart}
