@@ -96,18 +96,18 @@ export function HomeScreen({
     <div className="flex h-full flex-col bg-background">
       {/* Premium Header */}
       <div className="bg-primary text-primary-foreground shadow-md">
-        <header className="flex items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-secondary-foreground ring-2 ring-secondary/30 shadow-sm">
+        <header className="flex items-center justify-between px-5 py-4 pb-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground ring-2 ring-secondary/30 shadow-sm">
               <CircleUser className="h-7 w-7" aria-hidden />
             </div>
-            <div className="leading-tight">
+            <div className="min-w-0 leading-tight">
               <p className="text-[11px] font-medium text-primary-foreground/75 uppercase tracking-wide">Hola,</p>
-              <p className="text-base font-extrabold">{first}</p>
+              <p className="truncate text-base font-extrabold max-w-[9rem]">{first}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={onViewHistory}
@@ -122,7 +122,7 @@ export function HomeScreen({
               onClick={() => setShowResetConfirm(true)}
               title="Reiniciar usuario demo (Onboarding)"
               aria-label="Reiniciar usuario demo"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/12 text-primary-foreground/80 transition active:scale-95 hover:bg-primary-foreground/25 hover:text-primary-foreground"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground/12 text-primary-foreground/80 transition active:scale-95 hover:bg-primary-foreground/25 hover:text-primary-foreground"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
@@ -130,10 +130,10 @@ export function HomeScreen({
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6">
-        {/* Points & Savings Metric Cards */}
-        <div className="-mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/80">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6 -mt-5">
+        {/* Points & Savings Metric Cards — overlap header intentionally with controlled -mt */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-card p-4 shadow-md ring-1 ring-border/80">
             <div className="flex items-center gap-1.5 text-sirena-green">
               <Tag className="h-4 w-4" aria-hidden />
               <span className="text-xs font-bold">Ahorro total</span>
@@ -143,16 +143,16 @@ export function HomeScreen({
             </p>
             <div className="mt-1 flex items-center gap-1 text-[11px] font-extrabold text-amber-600">
               <Sparkles className="h-3 w-3" />
-              <span>{points.toLocaleString("es-DO")} pts Siremás</span>
+              <span className="truncate">{points.toLocaleString("es-DO")} pts Siremás</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={count > 0 && onViewCart ? onViewCart : onStart}
-            className="rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-border/80 transition active:scale-[0.98] hover:ring-primary/40"
+            className="rounded-2xl bg-card p-4 text-left shadow-md ring-1 ring-border/80 transition active:scale-[0.98] hover:ring-primary/40"
           >
-            <div className="flex items-center gap-1.5 text-muted-foreground">
+            <div className="flex items-center gap-1.5">
               <ShoppingCart className="h-4 w-4 text-primary" aria-hidden />
               <span className="text-xs font-bold text-foreground">Tu carrito</span>
             </div>
