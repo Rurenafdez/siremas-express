@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Receipt, Check, Tag, ShieldCheck, Camera, Sparkles } from "lucide-react"
+import { Receipt, Check, Tag, ShieldCheck, Camera, Sparkles, RotateCcw } from "lucide-react"
 import {
   type CartLine,
   cartTotals,
@@ -19,6 +19,7 @@ export function ReceiptSheet({
   paymentDetails,
   verificationPhotos = [],
   userName = "Camila Ramírez",
+  onRepeatOrder,
   onClose,
 }: {
   cart: CartLine[]
@@ -26,6 +27,7 @@ export function ReceiptSheet({
   paymentDetails?: PaymentDetails
   verificationPhotos?: string[]
   userName?: string
+  onRepeatOrder?: () => void
   onClose: () => void
 }) {
   const { subtotal, discounts, savingsEnRebaja, total } = cartTotals(cart)
@@ -171,13 +173,25 @@ export function ReceiptSheet({
         Transacción autorizada · Salida express verificada
       </div>
 
-      <button
-        type="button"
-        onClick={onClose}
-        className="mt-4 w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.99]"
-      >
-        Cerrar recibo
-      </button>
+      <div className="mt-4 space-y-2">
+        {onRepeatOrder && (
+          <button
+            type="button"
+            onClick={onRepeatOrder}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-extrabold text-secondary-foreground active:scale-[0.99] shadow-sm transition"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Repetir esta compra
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.99]"
+        >
+          Cerrar recibo
+        </button>
+      </div>
     </BottomSheet>
   )
 }

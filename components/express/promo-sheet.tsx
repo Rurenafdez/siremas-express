@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Tag, Plus } from "lucide-react"
+import { Tag, Plus, MapPin } from "lucide-react"
 import { type Product, formatDOP, lineSaving } from "@/lib/express-data"
 import { BottomSheet } from "./bottom-sheet"
 
@@ -18,11 +18,18 @@ export function PromoSheet({
 
   return (
     <BottomSheet onClose={onClose} labelledBy="promo-title">
-      <div className="flex items-center gap-2 text-secondary-foreground">
+      <div className="flex items-center justify-between">
         <span className="flex h-7 items-center gap-1 rounded-full bg-sirena-yellow px-2.5 text-[11px] font-bold uppercase tracking-wide text-sirena-navy-deep">
           <Tag className="h-3.5 w-3.5" aria-hidden /> En rebaja
         </span>
+        {promo.aisle && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+            <MapPin className="h-3 w-3 text-primary" />
+            {promo.aisle}
+          </span>
+        )}
       </div>
+
       <h2 id="promo-title" className="mt-3 text-lg font-extrabold text-foreground">
         Descuento especial en Compra Exprés
       </h2>
@@ -38,6 +45,12 @@ export function PromoSheet({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-bold text-foreground">{promo.name}</p>
+          {promo.aisle && (
+            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <MapPin className="h-3 w-3 text-primary shrink-0" />
+              <span className="truncate">{promo.aisle}</span>
+            </p>
+          )}
           <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-2 py-0.5 text-[11px] font-bold text-sirena-green">
             <Tag className="h-3 w-3" aria-hidden />
             Ahorro directo
@@ -61,7 +74,7 @@ export function PromoSheet({
         <button
           type="button"
           onClick={onAdd}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99] transition"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99] transition shadow-md"
         >
           <Plus className="h-5 w-5" aria-hidden />
           Agregar oferta (Ahorra {formatDOP(saving)})

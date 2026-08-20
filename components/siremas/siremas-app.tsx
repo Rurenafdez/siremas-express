@@ -206,6 +206,12 @@ export function SiremasApp() {
     handleReset()
   }
 
+  function handleRepeatOrder(pastItems: CartLine[]) {
+    // Point 15: Preload items from past order into active cart and go to Cart
+    setCart(pastItems.map((item) => ({ ...item })))
+    setScreen("cart")
+  }
+
   // If user hasn't accepted terms or verified cédula, show Onboarding
   if (user && (!user.hasAcceptedTerms || !user.cedulaVerified)) {
     return (
@@ -235,6 +241,7 @@ export function SiremasApp() {
       {screen === "history" && (
         <HistoryScreen
           orders={orders}
+          onRepeatOrder={handleRepeatOrder}
           onBack={() => setScreen("home")}
         />
       )}
@@ -270,6 +277,7 @@ export function SiremasApp() {
           onDec={handleDec}
           onRemove={handleRemove}
           onVerify={handleGoToQr}
+          onSirenaGo={() => setScreen("payment")}
           onBack={() => setScreen("scan")}
         />
       )}

@@ -1,16 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, Receipt, ChevronRight, Tag, Clock, Sparkles } from "lucide-react"
+import { ArrowLeft, Receipt, ChevronRight, Tag, RotateCcw, ShoppingBag, Check } from "lucide-react"
 import { type Order } from "@/lib/db/schema"
-import { formatDOP } from "@/lib/express-data"
+import { type CartLine, formatDOP } from "@/lib/express-data"
 import { ReceiptSheet } from "./receipt-sheet"
 
 export function HistoryScreen({
   orders,
+  onRepeatOrder,
   onBack,
 }: {
   orders: Order[]
+  onRepeatOrder?: (items: CartLine[]) => void
   onBack: () => void
 }) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -46,40 +48,65 @@ export function HistoryScreen({
           orders.map((order) => {
             const itemsCount = order.items.reduce((s, i) => s + i.qty, 0)
             return (
-              <button
+              <div
                 key={order.id}
-                type="button"
-                onClick={() => setSelectedOrder(order)}
-                className="flex w-full flex-col gap-2 rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition active:scale-[0.98] hover:ring-primary/40"
+                className="flex w-full flex-col gap-2.5 rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition hover:ring-primary/40"
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className="font-extrabold text-sm text-foreground">
-                    Orden {order.id}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {order.date.split("·")[0]}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-muted-foreground w-full">
-                  <span>{itemsCount} {itemsCount === 1 ? "artículo" : "artículos"}</span>
-                  <span className="text-sm font-extrabold tabular-nums text-foreground">
-                    {formatDOP(order.total)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-border/50 pt-2 w-full text-[11px]">
-                  <span className="text-muted-foreground truncate max-w-[13rem]">
-                    {order.paymentDetails?.description || "Tarjeta Visa"}
-                  </span>
-                  {order.discounts > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-2 py-0.5 font-bold text-sirena-green">
-                      <Tag className="h-3 w-3" />
-                      Ahorro {formatDOP(order.discounts)}
+                <div
+                  onClick={() => setSelectedOrder(order)}
+                  className="cursor-pointer space-y-2"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-extrabold text-sm text-foreground flex items-center gap-1.5">
+                      <Receipt className="h-4 w-4 text-primary" />
+                      Orden {order.id}
                     </span>
+                    <span className="text-xs text-muted-foreground">
+                      {order.date.split("·")[0]}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground w-full">
+                    <span>{itemsCount} {itemsCount === 1 ? "artículo" : "artículos"}</span>
+                    <span className="text-base font-extrabold tabular-nums text-foreground">
+                      {formatDOP(order.total)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between w-full text-[11px]">
+                    <span className="text-muted-foreground truncate max-w-[13rem]">
+                      {order.paymentDetails?.description || "Tarjeta Visa"}
+                    </span>
+                    {order.discounts > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-sirena-green-soft px-2 py-0.5 font-bold text-sirena-green">
+                        <Tag className="h-3 w-3" />
+                        Ahorro {formatDOP(order.discounts)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions: View Receipt & Repeat Purchase */}
+                <div className="flex items-center gap-2 border-t border-border/60 pt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrder(order)}
+                    className="flex-1 rounded-xl bg-muted py-2 text-center text-xs font-bold text-foreground transition active:scale-95 hover:bg-muted/80"
+                  >
+                    Ver recibo
+                  </button>
+                  {onRepeatOrder && (
+                    <button
+                      type="button"
+                      onClick={() => onRepeatOrder(order.items)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2 text-center text-xs font-bold text-primary-foreground transition active:scale-95 hover:bg-primary/90 shadow-sm"
+                    >
+                      <RotateCcw className="h-3 w-3 text-secondary" />
+                      Repetir compra
+                    </button>
                   )}
                 </div>
-              </button>
+              </div>
             )
           })
         )}
@@ -92,6 +119,15 @@ export function HistoryScreen({
           paymentDetails={selectedOrder.paymentDetails}
           verificationPhotos={selectedOrder.verificationPhotos}
           userName={selectedOrder.userName}
+          onRepeatOrder={
+            onRepeatOrder
+              ? () => {
+                  const items = selectedOrder.items
+                  setSelectedOrder(null)
+                  onRepeatOrder(items)
+                }
+              : undefined
+          }
           onClose={() => setSelectedOrder(null)}
         />
       )}

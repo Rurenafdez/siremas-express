@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, QrCode, Tag, Search } from "lucide-react"
+import { ArrowLeft, QrCode, Tag, Search, Zap, Smartphone } from "lucide-react"
 import {
   type CartLine,
   type Product,
@@ -18,6 +18,7 @@ export function CartScreen({
   onDec,
   onRemove,
   onVerify,
+  onSirenaGo,
   onBack,
 }: {
   cart: CartLine[]
@@ -26,6 +27,7 @@ export function CartScreen({
   onDec: (id: string) => void
   onRemove: (id: string) => void
   onVerify: () => void
+  onSirenaGo?: () => void
   onBack: () => void
 }) {
   const { subtotal, discounts, total } = cartTotals(cart)
@@ -77,9 +79,9 @@ export function CartScreen({
         )}
       </div>
 
-      {/* Totals */}
+      {/* Totals & Dual Checkout Routes (Point 17) */}
       <div className="border-t border-border bg-card px-5 pb-6 pt-4">
-        <dl className="space-y-2 text-sm">
+        <dl className="space-y-1.5 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Subtotal</dt>
             <dd className="font-semibold tabular-nums text-foreground">
@@ -93,17 +95,17 @@ export function CartScreen({
             </dd>
           </div>
           {discounts > 0 && (
-            <div className="flex items-center justify-between rounded-xl bg-sirena-green-soft px-3 py-2">
-              <dt className="flex items-center gap-1.5 text-sm font-semibold text-sirena-green">
-                <Tag className="h-4 w-4" aria-hidden />
+            <div className="flex items-center justify-between rounded-xl bg-sirena-green-soft px-3 py-1.5">
+              <dt className="flex items-center gap-1.5 text-xs font-bold text-sirena-green">
+                <Tag className="h-3.5 w-3.5" aria-hidden />
                 Tu ahorro
               </dt>
-              <dd className="font-extrabold tabular-nums text-sirena-green">
+              <dd className="font-extrabold tabular-nums text-xs text-sirena-green">
                 {formatDOP(discounts)}
               </dd>
             </div>
           )}
-          <div className="flex items-baseline justify-between border-t border-border pt-3">
+          <div className="flex items-baseline justify-between border-t border-border pt-2.5">
             <dt className="text-base font-bold text-foreground">Total</dt>
             <dd className="text-2xl font-extrabold tabular-nums text-foreground">
               {formatDOP(total)}
@@ -111,15 +113,31 @@ export function CartScreen({
           </div>
         </dl>
 
-        <button
-          type="button"
-          onClick={onVerify}
-          disabled={cart.length === 0}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground transition active:scale-[0.99] disabled:opacity-40"
-        >
-          <QrCode className="h-5 w-5 text-secondary" aria-hidden />
-          Generar Pase QR
-        </button>
+        <div className="mt-4 space-y-2">
+          {/* Route 1: QR Pass & Kiosk Verification */}
+          <button
+            type="button"
+            onClick={onVerify}
+            disabled={cart.length === 0}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground transition active:scale-[0.99] disabled:opacity-40 shadow-md"
+          >
+            <QrCode className="h-4 w-4 text-secondary" aria-hidden />
+            Seguir con QR (Verificación Kiosco)
+          </button>
+
+          {/* Route 2: SirenaGo Mobile Direct Checkout */}
+          {onSirenaGo && (
+            <button
+              type="button"
+              onClick={onSirenaGo}
+              disabled={cart.length === 0}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-extrabold text-secondary-foreground transition active:scale-[0.99] disabled:opacity-40"
+            >
+              <Zap className="h-4 w-4" aria-hidden />
+              Completar con SirenaGo (Pago 100% móvil)
+            </button>
+          )}
+        </div>
       </div>
 
       {searchOpen && (

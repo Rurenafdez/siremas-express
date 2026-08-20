@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { ArrowRight, Tag, Plus, Sparkles } from "lucide-react"
+import { ArrowRight, Tag, Plus, Sparkles, MapPin } from "lucide-react"
 import {
   type Product,
   formatDOP,
@@ -24,12 +24,21 @@ export function UnavailableSheet({
 
   return (
     <BottomSheet onClose={onClose} labelledBy="similar-product-title">
-      <div className="flex items-center gap-2 text-primary">
-        <Sparkles className="h-5 w-5 text-secondary" aria-hidden />
-        <h2 id="similar-product-title" className="text-lg font-extrabold text-foreground">
-          Producto similar
-        </h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-primary">
+          <Sparkles className="h-5 w-5 text-secondary" aria-hidden />
+          <h2 id="similar-product-title" className="text-lg font-extrabold text-foreground">
+            Producto similar
+          </h2>
+        </div>
+        {substitute.aisle && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+            <MapPin className="h-3 w-3 text-primary" />
+            {substitute.aisle}
+          </span>
+        )}
       </div>
+
       <p className="mt-1 text-sm text-muted-foreground text-pretty">
         Encontramos una alternativa de <span className="font-semibold text-foreground">marca propia La Sirena (Wala)</span> con la misma calidad a un mejor precio.
       </p>
@@ -92,7 +101,7 @@ export function UnavailableSheet({
         <button
           type="button"
           onClick={onAdd}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99] transition"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-base font-extrabold text-primary-foreground active:scale-[0.99] transition shadow-md"
         >
           <Plus className="h-5 w-5" aria-hidden />
           Agregar producto similar (Ahorra {formatDOP(saving)})
